@@ -46,7 +46,125 @@ export function buildContextPrompt(selectedDocs: DocumentData[]): string {
   return context;
 }
 
+// Client-side RAG page retrieval with keyword matching and synonym expansion
+export function retrieveRelevantPages(
+  query: string,
+  selectedDocs: DocumentData[],
+  limit: number = 20
+): DocumentData[] {
+  if (selectedDocs.length === 0) return [];
+
+  // Extract keywords (Kanji, Katakana of length >= 2, Alphanumeric of length >= 2)
+  const keywords = query.match(/[\u4e00-\u9faf]+|[\u30a0-\u30ffー]{2,}|[a-zA-Z0-9]{2,}/g) || [];
+  
+  // Fallback: if no keywords found (e.g. short greeting), return first 2 pages of each doc
+  if (keywords.length === 0) {
+    return selectedDocs.map(doc => ({
+      ...doc,
+      pages: doc.pages.slice(0, Math.max(2, Math.floor(limit / selectedDocs.length)))
+    })).filter(doc => doc.pages.length > 0);
+  }
+
+  // Synonym mappings for waterworks terms
+  const synonyms: Record<string, string[]> = {
+    'チャッキ': ['逆止', '逆流防止', 'チャッキ'],
+    'チャッキ弁': ['逆止弁', '逆流防止器', 'チャッキ'],
+    '逆止弁': ['チャッキ', '逆流防止', '逆止'],
+    'メーター': ['メータ', 'メーター'],
+    'メータ': ['メーター', 'メータ'],
+    '土被り': ['埋設', '深さ', '被り', '土被'],
+    '埋設': ['土被り', '深さ', '埋設'],
+    '深さ': ['土被り', '埋設', '深さ'],
+    '受水槽': ['受水タンク', '貯水槽', '受水槽'],
+    '受水タンク': ['受水槽', '貯水槽', '受水タンク'],
+    '逆流防止': ['チャッキ', '逆止', '逆流防止'],
+    '逆流防止弁': ['チャッキ', '逆止弁', '逆流防止器']
+  };
+
+  const expandedKws = new Set<string>(keywords);
+  for (const kw of keywords) {
+    if (synonyms[kw]) {
+      synonyms[kw].forEach(syn => expandedKws.add(syn));
+    }
+    if (kw.length > 2) {
+      if (kw.endsWith('弁')) expandedKws.add(kw.slice(0, -1));
+      if (kw.endsWith('槽')) expandedKws.add(kw.slice(0, -1));
+    }
+  }
+  const searchKws = Array.from(expandedKws);
+
+  interface PageWithScore {
+    doc: DocumentData;
+    page: any;
+    score: number;
+  }
+  
+  const scoredPages: PageWithScore[] = [];
+
+  for (const doc of selectedDocs) {
+    for (const page of doc.pages) {
+      let score = 0;
+      for (const kw of searchKws) {
+        const escapedKw = kw.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+        const regex = new RegExp(escapedKw, 'gi');
+        const count = (page.text.match(regex) || []).length;
+        if (count > 0) {
+          // Weight score by keyword length and frequency
+          score += kw.length * 10 + count * 2;
+        }
+      }
+      
+      // Bonus if document title matches keyword
+      for (const kw of searchKws) {
+        if (doc.title.includes(kw)) {
+          score += 5;
+        }
+      }
+
+      if (score > 0) {
+        scoredPages.push({ doc, page, score });
+      }
+    }
+  }
+
+  // Sort by score descending
+  scoredPages.sort((a, b) => b.score - a.score);
+
+  // Fallback if no page scored > 0: take first few pages
+  if (scoredPages.length === 0) {
+    return selectedDocs.map(doc => ({
+      ...doc,
+      pages: doc.pages.slice(0, Math.max(2, Math.floor(limit / selectedDocs.length)))
+    })).filter(doc => doc.pages.length > 0);
+  }
+
+  // Slice to retrieve top N pages
+  const topPages = scoredPages.slice(0, limit);
+
+  // Group pages back by document id
+  const docMap = new Map<string, { doc: DocumentData; pages: any[] }>();
+  for (const item of topPages) {
+    if (!docMap.has(item.doc.id)) {
+      docMap.set(item.doc.id, { doc: item.doc, pages: [] });
+    }
+    docMap.get(item.doc.id)!.pages.push(item.page);
+  }
+
+  // Construct return array
+  const result: DocumentData[] = [];
+  for (const value of docMap.values()) {
+    value.pages.sort((a, b) => a.page_number - b.page_number);
+    result.push({
+      ...value.doc,
+      pages: value.pages
+    });
+  }
+
+  return result;
+}
+
 // Service to call Gemini API
+
 export class GeminiService {
   private ai: GoogleGenerativeAI | null = null;
   private apiKey: string = "";

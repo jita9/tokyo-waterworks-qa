@@ -21,9 +21,10 @@ import {
 } from 'lucide-react';
 import Markdown from 'markdown-to-jsx';
 import './App.css';
-import { GeminiService } from './services/gemini';
+import { GeminiService, retrieveRelevantPages } from './services/gemini';
 import type { DocumentData } from './services/gemini';
 import rawSpecs from './data/specifications.json';
+
 
 // Cast imported JSON to our type
 const specificationsData = rawSpecs as DocumentData[];
@@ -33,7 +34,9 @@ interface Message {
   parts: { text: string }[];
   timestamp: Date;
   id: string;
+  references?: { docTitle: string; pages: number[] }[];
 }
+
 
 interface Note {
   id: string;
@@ -72,7 +75,7 @@ const sanitizeError = (error: any): string => {
     msgLower.includes("rate limit") || 
     msgLower.includes("429")
   ) {
-    return "APIの利用制限（クォータ）を超過しました。しばらく時間をおいてからお試しください。";
+    return "APIの利用制限（クォータ）を超過しました。左側パネルで選択する資料のチェックをいくつか外し、送信サイズを減らして1分ほど待ってから再度お試しください。";
   }
   
   // Safeguard: Truncate very long error payloads to prevent UI layout explosions
@@ -114,6 +117,10 @@ export default function App() {
   const [userInput, setUserInput] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [autoFilter, setAutoFilter] = useState<boolean>(() => {
+    return localStorage.getItem('auto_filter_context') !== 'false';
+  });
+
   
   // Notes state
   const [notes, setNotes] = useState<Note[]>(() => {
@@ -346,28 +353,44 @@ export default function App() {
       return;
     }
 
+    // Determine which documents/pages to actually send to the API
+    let docsToSend = selectedDocs;
+    let referencesForMessage: { docTitle: string; pages: number[] }[] = [];
+
+    if (autoFilter) {
+      docsToSend = retrieveRelevantPages(query, selectedDocs, 20);
+      referencesForMessage = docsToSend.map(doc => ({
+        docTitle: doc.title,
+        pages: doc.pages.map(p => p.page_number)
+      })).filter(ref => ref.pages.length > 0);
+    }
+
     try {
       const apiHistory = chatHistory.map(msg => ({
         role: msg.role,
         parts: [{ text: msg.parts[0].text }]
       }));
 
-      const reply = await geminiRef.current.askQuestion(query, selectedDocs, apiHistory);
+      const reply = await geminiRef.current.askQuestion(query, docsToSend, apiHistory);
       
       const botMsgId = crypto.randomUUID();
       const newBotMsg: Message = {
         id: botMsgId,
         role: 'model',
         parts: [{ text: reply }],
-        timestamp: new Date()
+        timestamp: new Date(),
+        references: referencesForMessage.length > 0 ? referencesForMessage : undefined
       };
       setChatHistory(prev => [...prev, newBotMsg]);
     } catch (e: any) {
       setErrorMsg(sanitizeError(e));
+      // Rollback: Remove the user message that failed to get a response
+      setChatHistory(prev => prev.filter(msg => msg.id !== userMsgId));
     } finally {
       setIsGenerating(false);
     }
   };
+
 
   // Add custom note
   const handleAddNote = () => {
@@ -630,13 +653,44 @@ ${notesContent}
             })}
           </div>
           
-          <div className="sources-footer">
-            <div className="token-estimate">
-              <span>アクティブなコンテキスト: </span>
-              <strong>
-                {specificationsData.filter(d => selectedDocIds.has(d.id)).reduce((sum, d) => sum + d.total_pages, 0)} ページ
-              </strong>
+          <div className="sources-footer animate-fade-in">
+            <div className="filter-toggle-container">
+              <label className="checkbox-container">
+                <input 
+                  type="checkbox" 
+                  checked={autoFilter}
+                  onChange={(e) => {
+                    const val = e.target.checked;
+                    setAutoFilter(val);
+                    localStorage.setItem('auto_filter_context', String(val));
+                  }} 
+                />
+                <span className="checkmark"></span>
+                <span className="toggle-label font-semibold">関連ページを自動抽出 (推奨)</span>
+              </label>
+              <p className="toggle-hint">質問ごとに関連性の高い上位20ページに自動で絞り込み、API制限エラー（429）を防止します。</p>
             </div>
+
+            {(() => {
+              const activePages = specificationsData.filter(d => selectedDocIds.has(d.id)).reduce((sum, d) => sum + d.total_pages, 0);
+              return (
+                <>
+                  <div className="token-estimate">
+                    <span>選択資料の合計ページ数: </span>
+                    <strong>{activePages} ページ</strong>
+                  </div>
+                  {activePages > 120 && !isDemoMode && !autoFilter ? (
+                    <div className="context-warning error animate-fade-in">
+                      ⚠️ ページ数が多すぎます。自動抽出が無効なため、制限エラー（Quota Exceeded）が発生する可能性が極めて高いです。資料を外すか、自動抽出を有効にしてください。
+                    </div>
+                  ) : activePages > 120 && !isDemoMode && autoFilter ? (
+                    <div className="context-warning info animate-fade-in">
+                      💡 自動抽出が有効なため、質問に関連する上位20ページのみが送信されます。制限を気にせずご利用いただけます。
+                    </div>
+                  ) : null}
+                </>
+              );
+            })()}
           </div>
         </section>
 
@@ -706,6 +760,18 @@ ${notesContent}
                         <Markdown>{msg.parts[0].text}</Markdown>
                       )}
                     </div>
+                    {msg.role === 'model' && msg.references && msg.references.length > 0 && (
+                      <div className="message-references">
+                        <div className="ref-title">🔍 参照元資料:</div>
+                        <div className="ref-tags">
+                          {msg.references.map((ref, idx) => (
+                            <span key={idx} className="ref-tag" title={ref.docTitle}>
+                              {ref.docTitle} (p. {ref.pages.join(', ')})
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     {msg.role === 'model' && (
                       <div className="message-actions">
                         <button 
