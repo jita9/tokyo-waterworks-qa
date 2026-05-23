@@ -493,7 +493,7 @@ export default function App() {
     setErrorMsg(null);
 
     try {
-      const model = geminiRef.current['ai']?.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const model = geminiRef.current['ai']?.getGenerativeModel({ model: "gemini-2.5-flash" });
       if (!model) throw new Error("Gemini AI Client is not initialized.");
 
       let notesContent = "";

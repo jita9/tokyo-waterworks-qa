@@ -197,7 +197,7 @@ export class GeminiService {
     }
 
     try {
-      const model = this.ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const model = this.ai.getGenerativeModel({ model: "gemini-2.5-flash" });
       
       const contextPrompt = buildContextPrompt(selectedDocs);
       
@@ -237,7 +237,7 @@ export class GeminiService {
     }
 
     try {
-      const model = this.ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const model = this.ai.getGenerativeModel({ model: "gemini-2.5-flash" });
       
       let docContent = `【ドキュメント名】: ${doc.title}\n【内容】:\n`;
       for (const page of doc.pages) {
