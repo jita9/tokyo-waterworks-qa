@@ -210,7 +210,10 @@ export class GeminiService {
           role: h.role === 'user' ? 'user' : 'model',
           parts: [{ text: h.parts[0].text }]
         })),
-        systemInstruction: systemInstruction,
+        systemInstruction: {
+          role: 'system',
+          parts: [{ text: systemInstruction }]
+        },
       });
 
       const response = await chat.sendMessage(question);
