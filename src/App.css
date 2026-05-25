@@ -723,28 +723,69 @@
 
 .ref-tags {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
 }
 
-.ref-tag {
+.ref-group-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  background: rgba(14, 165, 233, 0.03);
+  border: 1px solid rgba(14, 165, 233, 0.08);
+  padding: 6px 12px;
+  border-radius: 6px;
+  width: 100%;
+}
+
+.ref-doc-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.ref-page-links {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ref-page-link-tag {
   font-size: 10.5px;
-  padding: 2.5px 8px;
-  border-radius: 12px;
-  background: rgba(14, 165, 233, 0.06);
+  font-weight: 600;
+  padding: 1.5px 8px;
+  border-radius: 4px;
+  background: rgba(14, 165, 233, 0.08);
   border: 1px solid rgba(14, 165, 233, 0.2);
   color: var(--color-primary-hover);
-  max-width: 250px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  cursor: help;
+  text-decoration: none;
   transition: var(--transition-smooth);
 }
 
-.ref-tag:hover {
-  background: rgba(14, 165, 233, 0.12);
-  border-color: rgba(14, 165, 233, 0.4);
+.ref-page-link-tag:hover {
+  background: rgba(14, 165, 233, 0.16);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 5px var(--color-primary-glow);
+  transform: translateY(-0.5px);
+}
+
+/* Clickable inline citations inside message body */
+.message-body a {
+  color: var(--color-primary-hover);
+  text-decoration: none;
+  font-weight: 600;
+  border-bottom: 1px dotted var(--color-primary-hover);
+  padding: 0 2px;
+  transition: var(--transition-smooth);
+}
+
+.message-body a:hover {
+  color: var(--color-primary);
+  border-bottom-style: solid;
+  background: rgba(14, 165, 233, 0.08);
+  border-radius: 2px;
 }
 
 .message-actions {

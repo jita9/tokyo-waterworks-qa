@@ -29,6 +29,52 @@ import rawSpecs from './data/specifications.json';
 // Cast imported JSON to our type
 const specificationsData = rawSpecs as DocumentData[];
 
+// Helper to get actual document page label (e.g. 3-15 instead of p.17)
+export function getPageLabel(docId: string, pageNumber: number, pageText: string): string {
+  let prefix = "";
+  if (docId === 'chapter-1') prefix = "1";
+  else if (docId === 'chapter-2') prefix = "2";
+  else if (docId === 'chapter-3') prefix = "3";
+  else if (docId === 'standards') prefix = "4";
+  else if (docId === 'laws') prefix = "6";
+
+  if (prefix) {
+    const startText = pageText.substring(0, 300);
+    const regex = new RegExp(`\\b(${prefix}-\\d+)\\b`);
+    const match = startText.match(regex);
+    if (match) return match[1];
+    
+    const endText = pageText.substring(Math.max(0, pageText.length - 300));
+    const endMatch = endText.match(regex);
+    if (endMatch) return endMatch[1];
+  }
+  
+  return `p. ${pageNumber}`;
+}
+
+// Convert model citations like [第３章 手続 (p. 15)] to markdown links with accurate labels
+export function linkifyCitations(text: string, documents: DocumentData[]): string {
+  const regex = /\[([^\]\(]+)\s*\(p\.\s*(\d+(?:\s*,\s*p\.\s*\d+)*)\)\]/g;
+  
+  return text.replace(regex, (fullMatch, docTitle, pagesStr) => {
+    const doc = documents.find(d => d.title.trim() === docTitle.trim());
+    if (!doc) return fullMatch;
+    
+    const pageNums = pagesStr
+      .split(',')
+      .map((s: string) => parseInt(s.replace(/[^\d]/g, ''), 10))
+      .filter((n: number) => !isNaN(n));
+      
+    const links = pageNums.map((pNum: number) => {
+      const page = doc.pages.find(p => p.page_number === pNum);
+      const label = getPageLabel(doc.id, pNum, page ? page.text : '');
+      return `[${label}](${doc.url}#page=${pNum})`;
+    });
+    
+    return `[${doc.title} (${links.join(', ')})]`;
+  });
+}
+
 interface Message {
   role: 'user' | 'model';
   parts: { text: string }[];
@@ -782,18 +828,55 @@ ${notesContent}
                       {msg.role === 'user' ? (
                         <p>{msg.parts[0].text}</p>
                       ) : (
-                        <Markdown>{msg.parts[0].text}</Markdown>
+                        <Markdown
+                          options={{
+                            overrides: {
+                              a: {
+                                component: 'a',
+                                props: {
+                                  target: '_blank',
+                                  rel: 'noopener noreferrer'
+                                }
+                              }
+                            }
+                          }}
+                        >
+                          {linkifyCitations(msg.parts[0].text, specificationsData)}
+                        </Markdown>
                       )}
                     </div>
                     {msg.role === 'model' && msg.references && msg.references.length > 0 && (
                       <div className="message-references">
-                        <div className="ref-title">🔍 参照元資料:</div>
+                        <div className="ref-title">🔍 参照元資料 (クリックで開く):</div>
                         <div className="ref-tags">
-                          {msg.references.map((ref, idx) => (
-                            <span key={idx} className="ref-tag" title={ref.docTitle}>
-                              {ref.docTitle} (p. {ref.pages.join(', ')})
-                            </span>
-                          ))}
+                          {msg.references.map((ref, idx) => {
+                            const doc = specificationsData.find(d => d.title === ref.docTitle);
+                            const docUrl = doc ? doc.url : '#';
+                            return (
+                              <div key={idx} className="ref-group-container">
+                                <span className="ref-doc-label" title={ref.docTitle}>{ref.docTitle}:</span>
+                                <div className="ref-page-links">
+                                  {ref.pages.map((pNum, pIdx) => {
+                                    const page = doc?.pages.find(p => p.page_number === pNum);
+                                    const pageLabel = doc ? getPageLabel(doc.id, pNum, page?.text || '') : `p. ${pNum}`;
+                                    const linkUrl = docUrl !== '#' ? `${docUrl}#page=${pNum}` : '#';
+                                    return (
+                                      <a
+                                        key={pIdx}
+                                        href={linkUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="ref-page-link-tag"
+                                        title={`${ref.docTitle} の ${pageLabel} を開く`}
+                                      >
+                                        {pageLabel}
+                                      </a>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
