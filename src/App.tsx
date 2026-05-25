@@ -77,6 +77,14 @@ const sanitizeError = (error: any): string => {
   ) {
     return "APIの利用制限（クォータ）を超過しました。左側パネルで選択する資料のチェックをいくつか外し、送信サイズを減らして1分ほど待ってから再度お試しください。";
   }
+  if (
+    msgLower.includes("503") || 
+    msgLower.includes("high demand") || 
+    msgLower.includes("service unavailable") ||
+    msgLower.includes("overloaded")
+  ) {
+    return "APIサーバーが現在混雑しています（503エラー）。右上の設定アイコン（歯車）から「使用するモデル」を別のもの（例: gemini-3.5-flash や gemini-2.5-pro）に変更してお試しください。";
+  }
   
   // Safeguard: Truncate very long error payloads to prevent UI layout explosions
   if (msg.length > 250) {
@@ -120,6 +128,10 @@ export default function App() {
   const [autoFilter, setAutoFilter] = useState<boolean>(() => {
     return localStorage.getItem('auto_filter_context') !== 'false';
   });
+  const [selectedModel, setSelectedModel] = useState<string>(() => {
+    return localStorage.getItem('gemini_model_name') || 'gemini-2.5-flash';
+  });
+  const [tempModel, setTempModel] = useState<string>(selectedModel);
 
   
   // Notes state
@@ -132,7 +144,14 @@ export default function App() {
   const [isGeneratingStudyGuide, setIsGeneratingStudyGuide] = useState<boolean>(false);
 
   // Gemini service reference
-  const geminiRef = useRef<GeminiService>(new GeminiService(apiKey));
+  const geminiRef = useRef<GeminiService>(new GeminiService(apiKey, selectedModel));
+
+  useEffect(() => {
+    if (showKeyModal) {
+      setTempKey(apiKey);
+      setTempModel(selectedModel);
+    }
+  }, [showKeyModal, apiKey, selectedModel]);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // Suggested questions dashboard
@@ -164,12 +183,18 @@ export default function App() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatHistory, isGenerating]);
 
-  // Handle key submission
+  // Handle settings submission
   const handleSaveKey = () => {
     const cleanKey = tempKey.trim();
     setApiKey(cleanKey);
     localStorage.setItem('gemini_api_key', cleanKey);
+    
+    setSelectedModel(tempModel);
+    localStorage.setItem('gemini_model_name', tempModel);
+
     geminiRef.current.setApiKey(cleanKey);
+    geminiRef.current.setModelName(tempModel);
+
     setIsDemoMode(false);
     localStorage.setItem('is_demo_mode', 'false');
     setShowKeyModal(false);
@@ -927,6 +952,19 @@ ${notesContent}
                   value={tempKey}
                   onChange={(e) => setTempKey(e.target.value)}
                 />
+              </div>
+
+              <div className="input-group">
+                <label>使用するモデル (Model)</label>
+                <select 
+                  value={tempModel}
+                  onChange={(e) => setTempModel(e.target.value)}
+                  className="model-select-dropdown"
+                >
+                  <option value="gemini-2.5-flash">Gemini 2.5 Flash (標準・高速)</option>
+                  <option value="gemini-3.5-flash">Gemini 3.5 Flash (最新・高速・推奨)</option>
+                  <option value="gemini-2.5-pro">Gemini 2.5 Pro (高性能・混雑回避用)</option>
+                </select>
               </div>
 
               <div className="key-guide">

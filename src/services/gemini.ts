@@ -168,9 +168,11 @@ export function retrieveRelevantPages(
 export class GeminiService {
   private ai: GoogleGenerativeAI | null = null;
   private apiKey: string = "";
+  private modelName: string = "gemini-2.5-flash";
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, modelName: string = "gemini-2.5-flash") {
     this.setApiKey(apiKey);
+    this.modelName = modelName;
   }
 
   public setApiKey(apiKey: string) {
@@ -180,6 +182,10 @@ export class GeminiService {
     } else {
       this.ai = null;
     }
+  }
+
+  public setModelName(modelName: string) {
+    this.modelName = modelName.trim() || "gemini-2.5-flash";
   }
 
   public hasKey(): boolean {
@@ -197,7 +203,7 @@ export class GeminiService {
     }
 
     try {
-      const model = this.ai.getGenerativeModel({ model: "gemini-2.5-flash" });
+      const model = this.ai.getGenerativeModel({ model: this.modelName });
       
       const contextPrompt = buildContextPrompt(selectedDocs);
       
@@ -237,7 +243,7 @@ export class GeminiService {
     }
 
     try {
-      const model = this.ai.getGenerativeModel({ model: "gemini-2.5-flash" });
+      const model = this.ai.getGenerativeModel({ model: this.modelName });
       
       let docContent = `【ドキュメント名】: ${doc.title}\n【内容】:\n`;
       for (const page of doc.pages) {

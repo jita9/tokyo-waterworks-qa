@@ -1091,18 +1091,24 @@
   color: var(--text-main);
 }
 
-.modal-body .input-group input {
+.modal-body .input-group input, .modal-body .input-group select {
   background: var(--bg-input);
   border: 1px solid var(--border-color);
   color: var(--text-main);
   padding: 10px 12px;
   border-radius: 6px;
   font-size: 12px;
+  width: 100%;
 }
 
-.modal-body .input-group input:focus {
+.modal-body .input-group input:focus, .modal-body .input-group select:focus {
   outline: none;
   border-color: var(--color-primary);
+}
+
+.modal-body .input-group select option {
+  background: #0b1324;
+  color: var(--text-main);
 }
 
 .modal-body .key-guide a {
