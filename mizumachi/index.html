@@ -1,0 +1,1257 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mizumachi｜水道工事申請・設計支援</title>
+<style>
+  :root{
+    --blue:#0369a1; --blue-d:#075985; --blue-l:#e0f2fe; --aqua:#0ea5e9;
+    --ink:#1e293b; --sub:#64748b; --line:#cbd5e1; --bg:#f1f5f9;
+    --ok:#059669; --warn:#b45309; --err:#dc2626; --purple:#7c3aed;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI","Yu Gothic","Meiryo",sans-serif;
+    background:var(--bg); color:var(--ink); font-size:14px; line-height:1.6;
+  }
+  button{font-family:inherit; cursor:pointer;}
+  /* ---- ヘッダー・ナビ ---- */
+  .top{
+    background:linear-gradient(120deg,var(--blue-d),var(--blue));
+    color:#fff; padding:12px 22px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  }
+  .top.checker{background:linear-gradient(120deg,#4c1d95,var(--purple));}
+  .top .logo{font-size:19px; font-weight:700; letter-spacing:.04em;}
+  .top .mode{font-size:12px; background:rgba(255,255,255,.18); border-radius:99px; padding:3px 12px;}
+  .top .spacer{flex:1;}
+  .top button{
+    background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.5);
+    border-radius:8px; padding:7px 14px; font-size:13px;
+  }
+  .top button:hover{background:rgba(255,255,255,.28);}
+  nav.tabs{
+    display:flex; gap:2px; background:#fff; border-bottom:1px solid var(--line);
+    padding:0 16px; overflow-x:auto;
+  }
+  nav.tabs button{
+    border:none; background:none; padding:11px 14px; font-size:13.5px; color:var(--sub);
+    border-bottom:2.5px solid transparent; white-space:nowrap;
+  }
+  nav.tabs button.on{color:var(--blue-d); border-bottom-color:var(--aqua); font-weight:700;}
+  nav.tabs.checker button.on{color:#4c1d95; border-bottom-color:var(--purple);}
+  main{max-width:1240px; margin:0 auto; padding:18px 22px 70px;}
+  h1.page{font-size:18px; color:var(--blue-d); margin-bottom:4px;}
+  .pagesub{font-size:12.5px; color:var(--sub); margin-bottom:16px;}
+
+  /* ---- 汎用部品 ---- */
+  .card{background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:14px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .grid4{display:grid; grid-template-columns:repeat(4,1fr); gap:12px;}
+  @media(max-width:860px){ .grid2,.grid4{grid-template-columns:1fr 1fr;} }
+  @media(max-width:560px){ .grid2,.grid4{grid-template-columns:1fr;} }
+  .kpi{background:#fff; border:1px solid var(--line); border-radius:12px; padding:14px 16px;}
+  .kpi .n{font-size:26px; font-weight:700; color:var(--blue-d);}
+  .kpi .l{font-size:12px; color:var(--sub);}
+  table.list{width:100%; border-collapse:collapse; background:#fff; font-size:13px;}
+  table.list th{
+    text-align:left; font-size:11.5px; color:var(--sub); border-bottom:2px solid var(--line);
+    padding:8px 10px; background:#f8fafc;
+  }
+  table.list td{border-bottom:1px solid #e2e8f0; padding:9px 10px;}
+  table.list tr.click{cursor:pointer;}
+  table.list tr.click:hover td{background:var(--blue-l);}
+  .badge{display:inline-block; font-size:11px; font-weight:700; border-radius:99px; padding:2px 10px;}
+  .b-draft{background:#e2e8f0; color:#475569;}
+  .b-ai{background:#fef3c7; color:#92400e;}
+  .b-sub{background:#dbeafe; color:#1d4ed8;}
+  .b-remand{background:#fee2e2; color:#b91c1c;}
+  .b-ok{background:#d1fae5; color:#065f46;}
+  .btn{
+    border-radius:9px; padding:9px 18px; font-size:13.5px; border:1px solid var(--blue);
+    background:var(--blue); color:#fff;
+  }
+  .btn:hover{background:var(--blue-d);}
+  .btn.ghost{background:#fff; color:var(--blue-d);}
+  .btn.ghost:hover{background:var(--blue-l);}
+  .btn.gray{background:#fff; color:var(--sub); border-color:var(--line);}
+  .btn.green{background:var(--ok); border-color:var(--ok);}
+  .btn.red{background:#fff; color:var(--err); border-color:var(--err);}
+  .btn.purple{background:var(--purple); border-color:var(--purple);}
+  .btn:disabled{opacity:.45; cursor:not-allowed;}
+  .fld{display:flex; flex-direction:column; gap:3px; margin-bottom:10px;}
+  .fld label{font-size:12px; color:var(--sub); font-weight:600;}
+  .fld input[type=text],.fld input[type=date],.fld input[type=number],.fld select,.fld textarea{
+    border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:14px;
+    font-family:inherit; background:#fff; width:100%;
+  }
+  .fld input:focus,.fld textarea:focus,.fld select:focus{outline:2px solid var(--aqua); outline-offset:-1px;}
+  .fld textarea{min-height:60px; resize:vertical;}
+  .radios{display:flex; flex-wrap:wrap; gap:6px 14px; padding:4px 0;}
+  .radios label{display:flex; align-items:center; gap:5px; font-size:13px; cursor:pointer;}
+  .hint{font-size:11.5px; color:var(--sub);}
+  .empty{color:var(--sub); font-size:13px; padding:24px; text-align:center;}
+
+  /* ---- ウィザード ---- */
+  .steps{display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap;}
+  .steps .st{
+    flex:1; min-width:110px; text-align:center; font-size:12px; padding:8px 4px;
+    background:#fff; border:1px solid var(--line); border-radius:9px; color:var(--sub);
+  }
+  .steps .st.on{background:var(--blue); color:#fff; border-color:var(--blue); font-weight:700;}
+  .steps .st.done{background:var(--blue-l); color:var(--blue-d); border-color:var(--aqua);}
+  .wzbtns{display:flex; gap:10px; justify-content:flex-end; margin-top:8px;}
+
+  /* ---- AI審査 ---- */
+  .finding{
+    display:flex; gap:10px; padding:11px 12px; border:1px solid var(--line);
+    border-radius:10px; margin-bottom:8px; background:#fff; align-items:flex-start;
+  }
+  .finding .ic{font-size:17px; line-height:1.3;}
+  .finding .t{font-weight:700; font-size:13.5px;}
+  .finding .d{font-size:12.5px; color:var(--sub);}
+  .finding.warn{border-color:#fcd34d; background:#fffbeb;}
+  .finding.err{border-color:#fca5a5; background:#fef2f2;}
+  .spin{display:inline-block; animation:rot 1s linear infinite;}
+  @keyframes rot{to{transform:rotate(360deg);}}
+
+  /* ---- Web-CAD ---- */
+  .cadbar{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; align-items:center;}
+  .cadbar button{
+    border:1px solid var(--line); background:#fff; border-radius:8px; padding:7px 12px; font-size:12.5px;
+  }
+  .cadbar button.on{background:var(--blue); color:#fff; border-color:var(--blue);}
+  .cadwrap{background:#fff; border:1px solid var(--line); border-radius:12px; overflow:auto;}
+  #cadSvg{display:block; touch-action:none; cursor:crosshair;}
+  #cadSvg .cadel.sel{filter:drop-shadow(0 0 3px #f59e0b);}
+  .legend{font-size:11.5px; color:var(--sub); margin-top:8px;}
+
+  /* ---- 水理計算 ---- */
+  .calcres table{width:100%; border-collapse:collapse; font-size:13px;}
+  .calcres td{border-bottom:1px solid #e2e8f0; padding:7px 8px;}
+  .calcres td:last-child{text-align:right; font-variant-numeric:tabular-nums;}
+  .verdict{font-size:16px; font-weight:700; padding:12px; border-radius:10px; text-align:center; margin-top:10px;}
+  .verdict.ok{background:#d1fae5; color:#065f46;}
+  .verdict.ng{background:#fee2e2; color:#b91c1c;}
+
+  /* ---- ルール参照 ---- */
+  .rule{background:#fff; border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:9px;}
+  .rule .cat{font-size:10.5px; font-weight:700; color:var(--blue); background:var(--blue-l);
+    border-radius:5px; padding:1px 8px; display:inline-block; margin-bottom:3px;}
+  .rule .t{font-weight:700; font-size:13.5px;}
+  .rule .b{font-size:12.5px; color:#334155; margin-top:3px;}
+  .rule .src{font-size:11px; color:var(--sub); margin-top:4px;}
+
+  /* ---- 履歴 ---- */
+  .tl{border-left:2px solid var(--aqua); margin-left:8px; padding-left:16px;}
+  .tl .ev{position:relative; margin-bottom:12px; font-size:13px;}
+  .tl .ev::before{
+    content:''; position:absolute; left:-21.5px; top:5px; width:9px; height:9px;
+    border-radius:50%; background:var(--aqua);
+  }
+  .tl .ev .d{font-size:11px; color:var(--sub);}
+
+  /* ---- 申請書類タブ ---- */
+  .formgrid{display:grid; grid-template-columns:minmax(0,1fr) 360px; gap:16px;}
+  @media(max-width:960px){ .formgrid{grid-template-columns:1fr;} }
+  .sec{background:#fff; border:1px solid var(--line); border-radius:12px; margin-bottom:12px; overflow:hidden;}
+  .sec>h3{font-size:13.5px; padding:9px 14px; background:var(--blue-l); color:var(--blue-d);
+    border-bottom:1px solid var(--line);}
+  .sec .body{padding:12px 14px; display:grid; grid-template-columns:1fr 1fr; gap:8px 14px;}
+  @media(max-width:640px){ .sec .body{grid-template-columns:1fr;} }
+  .sec .fld{margin-bottom:0;}
+  .fldwide{grid-column:1/-1;}
+  .docpanel{background:#fff; border:1px solid var(--line); border-radius:12px; padding:14px; align-self:start;
+    position:sticky; top:12px;}
+  .doc{border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:10px; background:#f8fafc;}
+  .doc .no{display:inline-block; font-size:11px; font-weight:700; color:#fff; background:var(--blue);
+    border-radius:5px; padding:1px 8px; margin-bottom:4px;}
+  .doc .ttl{font-size:13.5px; font-weight:700;}
+  .doc .desc{font-size:11.5px; color:var(--sub); margin:3px 0 8px;}
+  .doc .btns{display:flex; gap:8px;}
+  .doc button{flex:1; border-radius:8px; padding:7px 0; font-size:12.5px;}
+  .doc button.prev{background:var(--blue); color:#fff; border:1px solid var(--blue);}
+  .doc button.pdf{background:#fff; color:var(--blue-d); border:1px solid var(--blue);}
+
+  /* ---- A4プレビュー ---- */
+  .overlay{position:fixed; inset:0; background:rgba(15,23,42,.65); z-index:50; display:flex; flex-direction:column;}
+  .overlay-bar{background:#0f172a; color:#fff; padding:10px 18px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
+  .overlay-bar .t{font-size:14px; font-weight:700;}
+  .overlay-bar .spacer{flex:1;}
+  .overlay-bar button{border-radius:8px; padding:7px 16px; font-size:13px;}
+  .overlay-bar .print{background:var(--blue); color:#fff; border:1px solid var(--blue);}
+  .overlay-bar .close{background:transparent; color:#fff; border:1px solid #64748b;}
+  .overlay-body{flex:1; overflow:auto; padding:24px 12px 60px;}
+  .sheet{
+    width:210mm; min-height:297mm; margin:0 auto; background:#fff; color:#000;
+    padding:16mm 15mm; box-shadow:0 6px 30px rgba(0,0,0,.4);
+    font-family:"Hiragino Mincho ProN","Yu Mincho","MS Mincho",serif;
+    font-size:11.5pt; line-height:1.55;
+  }
+  .sheet .docdate{text-align:right; font-size:10.5pt; margin-bottom:2mm;}
+  .sheet h1{text-align:center; font-size:17pt; font-weight:600; letter-spacing:.35em; margin:3mm 0 6mm;}
+  .sheet .to{font-size:12pt; margin:3mm 0 4mm;}
+  .sheet .lead{font-size:10.5pt; margin:2mm 0 4mm;}
+  .sheet table{width:100%; border-collapse:collapse; margin:2.5mm 0; font-size:10.5pt;}
+  .sheet th,.sheet td{border:1.2px solid #000; padding:1.8mm 2.4mm; vertical-align:middle; text-align:left; font-weight:400;}
+  .sheet th{background:#f1f1f1; width:32mm; font-size:10pt; text-align:center;}
+  .sheet .ckline{margin:1.5mm 0; font-size:11pt;}
+  .ckbox{font-size:12.5pt; margin-right:1mm;}
+  .fv{font-weight:600; padding:0 .5mm;}
+  .fb{display:inline-block; border-bottom:1px dotted #555; min-width:8em; min-height:1em; vertical-align:bottom;}
+  .fb.yw{min-width:2.2em;}
+  .sheet .seal{display:inline-block; width:9mm; height:9mm; border:1px solid #888; border-radius:50%;
+    color:#888; font-size:8pt; text-align:center; line-height:9mm; vertical-align:middle; margin-left:3mm;}
+  .sheet .notes{font-size:9pt; color:#222; margin-top:4mm; line-height:1.6;}
+  .sheet .notes li{margin-left:5mm;}
+  .sheet .center{text-align:center;}
+  .sheet .ki{text-align:center; letter-spacing:1.5em; margin:4mm 0 2mm; font-size:12pt;}
+  .sheet ol.items{margin:2mm 0 4mm 8mm; font-size:11pt;}
+  .sheet ol.items li{margin-bottom:1mm;}
+  .sheet .sign{margin-top:6mm; margin-left:50%;}
+  .sheet .sign .row{margin-bottom:2mm;}
+
+  @media print{
+    @page{size:A4; margin:0;}
+    body *{visibility:hidden;}
+    #overlayBody{position:static !important; overflow:visible !important; padding:0 !important;}
+    #sheetWrap .sheet, #sheetWrap .sheet *{visibility:visible;}
+    #sheetWrap .sheet{position:absolute; left:0; top:0; margin:0; box-shadow:none; width:210mm; min-height:297mm;}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+'use strict';
+
+/* ================= 状態 ================= */
+const STORAGE = 'mizumachiApp_v1';
+
+function todayISO(off){
+  const d = new Date(Date.now() + (off || 0) * 86400000);
+  return d.toISOString().slice(0, 10);
+}
+
+const DEFAULT_PROXY_ITEMS =
+  '1　給水装置工事（新設・改造・撤去）の申込み及び申請に関すること\n' +
+  '2　設計審査及び工事検査の申込みに関すること\n' +
+  '3　工事費の納入並びに清算（還付・追徴）に関すること';
+
+const PROFILE_DEFAULT = {
+  companyName:'ミズマチ工業株式会社', companyNo:'第12345号', companyRep:'代表取締役 田路 花子',
+  companyTel:'03-1111-2222', companyAddr:'東京都渋谷区道玄坂一丁目2番3号',
+  engineerName:'田路 花子', engineerLicense:'第654321号'
+};
+
+function seedApps(){
+  return [
+    { id:'A-2606-001', status:'ai-review', updated:todayISO(-1), aiDone:false,
+      data:{ workType:'新設', applyKind:'給水装置工事申込み',
+        ownerKana:'スイドウ タロウ', ownerName:'水道 太郎', ownerZip:'160-0023',
+        ownerAddr:'東京都新宿区西新宿二丁目8番1号', ownerTel:'03-0000-0000',
+        siteAddr:'東京都新宿区西新宿二丁目8番1号', siteBuilding:'', siteUse:'一般住宅',
+        meterDiaNew:'20mm', customerNo:'',
+        workSummary:'配水小管φ100mmより分岐し、給水管φ20mmを新設、メータ（呼び径20mm）を設置する。' },
+      history:[ {t:todayISO(-2), ev:'案件を作成（新規申請ウィザード）'},
+                {t:todayISO(-1), ev:'設計図面をアップロード'} ] },
+    { id:'A-2606-002', status:'submitted', updated:todayISO(-3), aiDone:true,
+      data:{ workType:'改造', applyKind:'指定給水装置工事事業者設計審査申込み',
+        ownerKana:'ヤマダ ハナコ', ownerName:'山田 花子', ownerZip:'154-0021',
+        ownerAddr:'東京都世田谷区豪徳寺一丁目4番5号', ownerTel:'03-2222-3333',
+        siteAddr:'東京都世田谷区豪徳寺一丁目4番5号', siteBuilding:'', siteUse:'共同住宅',
+        meterDiaNew:'25mm', customerNo:'00-234567-1-0',
+        workSummary:'既設給水管φ20mmをφ25mmへ増径改造。メータ口径変更を伴う。' },
+      history:[ {t:todayISO(-6), ev:'案件を作成（新規申請ウィザード）'},
+                {t:todayISO(-4), ev:'AI事前審査を実行（指摘1件）'},
+                {t:todayISO(-3), ev:'東京都へ設計審査を申請（様式1-3）'} ] },
+    { id:'A-2605-014', status:'approved', updated:todayISO(-10), aiDone:true,
+      data:{ workType:'撤去', applyKind:'給水装置工事申込み',
+        ownerKana:'サトウ イチロウ', ownerName:'佐藤 一郎', ownerZip:'166-0004',
+        ownerAddr:'東京都杉並区阿佐谷南三丁目1番2号', ownerTel:'03-4444-5555',
+        siteAddr:'東京都杉並区阿佐谷南三丁目1番2号', siteBuilding:'', siteUse:'一般住宅',
+        meterDiaNew:'', meterDiaOld:'13mm', customerNo:'00-345678-1-0',
+        workSummary:'建物解体に伴う給水装置（φ13mm）の撤去。' },
+      history:[ {t:todayISO(-20), ev:'案件を作成（新規申請ウィザード）'},
+                {t:todayISO(-15), ev:'東京都へ審査申請（様式1-3）'},
+                {t:todayISO(-10), ev:'承認（設計審査合格）'} ] }
+  ];
+}
+
+function freshState(){
+  return {
+    view:'jigyosha', tab:'dashboard',
+    apps:seedApps(), activeAppId:'A-2606-001',
+    profile:Object.assign({}, PROFILE_DEFAULT),
+    wizardStep:0, wizardData:{},
+    docData:{ proxyItems:DEFAULT_PROXY_ITEMS, appDate:todayISO(0) },
+    docPreviewId:null,
+    cad:{ tool:'kyusui', dia:'20', elems:[], draft:null, selId:null, seq:1 },
+    calc:{ press:'0.20', dia:'20', len:'12', rise:'4', flow:'24', meterLoss:'2.0' },
+    ruleQuery:''
+  };
+}
+function loadState(){
+  try{
+    const s = JSON.parse(localStorage.getItem(STORAGE));
+    if(s && s.apps) { s.docPreviewId = null; s.cad.draft = null; return s; }
+  }catch(e){}
+  return null;
+}
+const S = loadState() || freshState();
+function save(){ try{ localStorage.setItem(STORAGE, JSON.stringify(S)); }catch(e){} }
+
+/* ================= ヘルパー ================= */
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+const STATUS = {
+  'draft':    {l:'下書き',      c:'b-draft'},
+  'ai-review':{l:'AI事前審査',  c:'b-ai'},
+  'submitted':{l:'審査申請中',  c:'b-sub'},
+  'remand':   {l:'差戻し',      c:'b-remand'},
+  'approved': {l:'承認済み',    c:'b-ok'}
+};
+function badge(st){
+  const i = STATUS[st] || {l:st, c:'b-draft'};
+  return '<span class="badge ' + i.c + '">' + esc(i.l) + '</span>';
+}
+function appById(id){ return S.apps.find(function(a){ return a.id === id; }); }
+function activeApp(){ return appById(S.activeAppId) || null; }
+function pushHist(app, ev){ app.history.push({t:todayISO(0), ev:ev}); app.updated = todayISO(0); }
+function appName(a){ return (a.data.siteAddr || '（場所未入力）') + '｜' + (a.data.workType || '—'); }
+
+/* ================= AI事前審査（モック） ================= */
+function aiCheck(app){
+  const d = app.data, f = [];
+  if(d.ownerName && d.ownerAddr && d.ownerTel){
+    f.push({lv:'ok', t:'申込者情報', d:'氏名・住所・電話番号が揃っています（様式1-3 申込者欄に転記可能）。'});
+  }else{
+    f.push({lv:'err', t:'申込者情報が不足', d:'氏名・住所・電話番号は様式1-3の必須項目です。入力してください。'});
+  }
+  const dia = parseInt(d.meterDiaNew || d.meterDiaOld || '0', 10);
+  if(d.workType !== '撤去' && !dia){
+    f.push({lv:'err', t:'メータ呼び径が未入力', d:'新設・改造ではメータ呼び径（新）の記入が必要です。'});
+  }else if(dia >= 40){
+    f.push({lv:'warn', t:'口径40mm以上', d:'直結直圧給水の上限を超える可能性があります。増圧直結・受水タンク方式の検討と事前協議を推奨します。'});
+  }else if(dia){
+    f.push({lv:'ok', t:'メータ呼び径', d:'φ' + dia + 'mm：一般的な直結給水の範囲内です。'});
+  }
+  if(d.siteUse === '共同住宅'){
+    f.push({lv:'warn', t:'共同住宅', d:'3階を超える直結給水は「三階までの直結給水・特例直圧給水事前調査申請書」（様式42）による事前調査が必要になる場合があります。'});
+  }
+  if(d.workType === '改造' && !d.customerNo){
+    f.push({lv:'warn', t:'お客さま番号が未入力', d:'改造・撤去工事では既設のお客さま番号の記入が必要です。'});
+  }
+  if((d.workSummary || '').indexOf('分岐') >= 0){
+    f.push({lv:'ok', t:'配水管からの分岐', d:'せん孔・コア取付・プラグ取付は都の立会いの下で行う必要があります（工事施行要領 6.4.2）。'});
+  }
+  f.push({lv:'ok', t:'様式1-3 記載事項', d:'申込み区分・工事種別・工事費請求先のチェック欄を確認しました。'});
+  f.push({lv:'ok', t:'誓約事項・承諾事項', d:'裏面誓約事項の確認が必要です（申込者・指定事業者の双方）。'});
+  return f;
+}
+
+/* ================= 水理計算 ================= */
+function calcHydraulics(c){
+  const P = parseFloat(c.press), D = parseFloat(c.dia) / 1000, L = parseFloat(c.len);
+  const rise = parseFloat(c.rise), Q = parseFloat(c.flow), mLoss = parseFloat(c.meterLoss);
+  if(!(P > 0) || !(D > 0) || !(L > 0) || !(Q > 0) || isNaN(rise) || isNaN(mLoss)) return null;
+  const Qs = Q / 1000 / 60;                       // L/min -> m3/s
+  const A = Math.PI * D * D / 4;
+  const v = Qs / A;                               // m/s
+  const lam = 0.0126 + (0.01739 - 0.1087 * D) / Math.sqrt(v);   // ウェストン公式（φ50以下）
+  const hf = lam * (L / D) * v * v / (2 * 9.8);   // 摩擦損失水頭 m
+  const head = P * 101.97;                        // MPa -> m
+  const totalLoss = hf + mLoss + rise;
+  const margin = head - totalLoss;
+  return { v:v, lam:lam, hf:hf, head:head, mLoss:mLoss, rise:rise, totalLoss:totalLoss,
+           margin:margin, ok:(margin >= 5) };
+}
+function calcResultHTML(){
+  const r = calcHydraulics(S.calc);
+  if(!r) return '<div class="empty">数値を入力すると自動計算されます</div>';
+  function n(x, k){ return x.toFixed(k); }
+  return '' +
+  '<div class="calcres"><table>' +
+    '<tr><td>管内流速 v</td><td>' + n(r.v,2) + ' m/s' + (r.v > 2 ? '　⚠️ 2.0m/s超' : '') + '</td></tr>' +
+    '<tr><td>摩擦損失係数 λ（ウェストン公式）</td><td>' + n(r.lam,4) + '</td></tr>' +
+    '<tr><td>管の摩擦損失水頭</td><td>' + n(r.hf,2) + ' m</td></tr>' +
+    '<tr><td>メータ・器具類の損失水頭</td><td>' + n(r.mLoss,1) + ' m</td></tr>' +
+    '<tr><td>立上り高さ（高低差）</td><td>' + n(r.rise,1) + ' m</td></tr>' +
+    '<tr><td><strong>損失合計</strong></td><td><strong>' + n(r.totalLoss,2) + ' m</strong></td></tr>' +
+    '<tr><td>配水管水圧（水頭換算）</td><td>' + n(r.head,1) + ' m</td></tr>' +
+    '<tr><td><strong>余裕水頭</strong></td><td><strong>' + n(r.margin,2) + ' m</strong></td></tr>' +
+  '</table>' +
+  '<div class="verdict ' + (r.ok ? 'ok' : 'ng') + '">' +
+    (r.ok ? '✅ 給水可能（余裕水頭 5m 以上を確保）' : '❌ 水頭不足（口径アップ・増圧方式等の検討が必要）') +
+  '</div></div>';
+}
+
+/* ================= ルールDB（東京都・工事施行要領 令和8年4月版より） ================= */
+const RULES = [
+  {cat:'申請様式', t:'現行の基本様式は「給水装置工事申請申込書」（様式1-3）',
+   b:'工事申込み・施行承認申込み・指定事業者設計審査申込みは様式1-3に統合されている。該当する申込み区分に「✔」を付けて使用する。',
+   src:'工事施行要領 様式記入例／給水装置工事様式一覧表'},
+  {cat:'工事検査', t:'工事完了時は工事検査申込書（様式37-2）を提出',
+   b:'給水条例第6条第2項に基づき、工事完了時に工事場所を所管する取扱事業所へ申し込む。自主検査時の残留塩素（遊離）濃度の測定値と測定日を記入すること。',
+   src:'工事施行要領 6.4.3'},
+  {cat:'水質確認', t:'給水管取り出し工事後は残留塩素を測定',
+   b:'施工後の水質検査として残留塩素（遊離）濃度を測定し、都の立会者へ測定値を報告する。',
+   src:'工事施行要領 6.4.2／給水装置設計・施工基準12.5'},
+  {cat:'立会い', t:'せん孔・コア取付・プラグ取付は都の立会いが必須',
+   b:'配水管からの分岐・撤去では、都から別に指示されたものを除き、必ず都の立会いの下で行う。分岐位置は2点以上のオフセットで測定する。',
+   src:'工事施行要領 6.4.2'},
+  {cat:'設計変更', t:'分岐位置・口径の変更は様式3-1＋図面',
+   b:'分岐位置を異なる管路の配水小管に変更、分岐部分の口径変更、メータ取付部分の口径変更は、届（様式3-1）に変更内容が分かる図面を添えて提出する。',
+   src:'工事施行要領 7.1'},
+  {cat:'工事費', t:'指定期間内に工事費を納入しないと申込み取消し',
+   b:'給水条例施行規程第14条第1項。また納入日から3月を経過しても工事着手の依頼がないときも取消しとみなされる（同条第2項）。',
+   src:'工事施行要領 様式1-3 注意事項'},
+  {cat:'委任状', t:'委任状の必須4項目',
+   b:'①委任者の住所・氏名及び印、②受任者の住所・氏名、③委任年月日、④委任内容。形式は任意様式でよい。',
+   src:'工事施行要領 4.4'},
+  {cat:'記録保管', t:'工事記録は3年間保管',
+   b:'施工主の氏名、施行場所、施行完了年月日、主任技術者氏名、完成図、使用材料、構造・材質基準適合の確認方法と結果を記録し、作成日から3年間保管する。',
+   src:'工事施行要領 6.4.4'},
+  {cat:'一時使用', t:'使用期間1年以内の工事用給水は新設と撤去を同時申込み',
+   b:'ビル工事等の一時使用目的で使用予定期間が1年以内の場合、新設工事の申込みと同時に撤去工事の申込みを行う。',
+   src:'工事施行要領 26.3'},
+  {cat:'既設確認', t:'承認を受けていない給水装置は「給水装置確認申込み」（様式277）',
+   b:'未承認設置・無承認口径変更・残存給水管などを給水装置として使用したい場合は、様式277にチェックの上、完成図1部を添えて所管の取扱事業所へ提出する。',
+   src:'工事施行要領 26.2'}
+];
+
+/* ================= 申請書類（書類定義・テンプレート） ================= */
+const DOC_SECTIONS = [
+  { title:'① 申込内容', fields:[
+    {k:'appDate', label:'申込年月日', type:'date'},
+    {k:'applyKind', label:'申込み区分（様式1-3）', type:'radio',
+      options:['給水装置工事施行承認申込み','給水装置工事申込み','指定給水装置工事事業者設計審査申込み']},
+    {k:'workType', label:'工事種別', type:'radio', options:['新設','改造','撤去']},
+    {k:'customerNo', label:'お客さま番号（既設がある場合）', ph:'例：00-123456-1-0'},
+    {k:'mainCustomerNo', label:'幹栓お客さま番号（支分栓工事のとき）'}
+  ]},
+  { title:'② 申込者（施工主）', fields:[
+    {k:'ownerKana', label:'フリガナ', ph:'スイドウ タロウ'},
+    {k:'ownerName', label:'氏名（法人は法人名＋代表者名を併記）', ph:'水道 太郎'},
+    {k:'ownerZip', label:'郵便番号', ph:'160-0023'},
+    {k:'ownerTel', label:'電話番号', ph:'03-0000-0000'},
+    {k:'ownerAddr', label:'住所', ph:'東京都新宿区西新宿○丁目○番○号', wide:true}
+  ]},
+  { title:'③ 工事場所', fields:[
+    {k:'siteAddr', label:'工事場所（住所）', ph:'東京都新宿区西新宿○丁目○番○号', wide:true},
+    {k:'siteBuilding', label:'建物名・部屋番号（あれば）'},
+    {k:'siteUse', label:'用途', ph:'一般住宅／共同住宅／店舗 など'}
+  ]},
+  { title:'④ 指定給水装置工事事業者（委任代理人）', fields:[
+    {k:'companyName', label:'事業者名'},
+    {k:'companyNo', label:'指定番号', ph:'第12345号'},
+    {k:'companyRep', label:'代表者名'},
+    {k:'companyTel', label:'電話番号'},
+    {k:'companyAddr', label:'所在地', wide:true}
+  ]},
+  { title:'⑤ 給水装置工事主任技術者', fields:[
+    {k:'engineerName', label:'氏名'},
+    {k:'engineerLicense', label:'免状交付番号', ph:'第654321号'}
+  ]},
+  { title:'⑥ 工事内容・メータ・工事費請求先', fields:[
+    {k:'meterDiaNew', label:'メータ呼び径（新）', ph:'20mm　※新設・口径変更のとき'},
+    {k:'meterDiaOld', label:'メータ呼び径（旧）', ph:'※口径変更・再使用・撤去のとき'},
+    {k:'existing', label:'同一敷地内の既設給水装置', type:'radio', options:['無','有（使用中）','有（中止中）']},
+    {k:'billTo', label:'工事費請求先', type:'radio', options:['申込者','委任代理人','その他']},
+    {k:'billOther', label:'請求先その他（住所・氏名・電話番号）', ph:'「その他」のときのみ', wide:true},
+    {k:'workSummary', label:'工事概要・摘要', type:'textarea', wide:true}
+  ]},
+  { title:'⑦ 完工・検査の情報（様式2-1／37-2 用）', fields:[
+    {k:'designApprovedDate', label:'設計審査日', type:'date'},
+    {k:'completionDate', label:'完工日', type:'date'},
+    {k:'inspectionDate', label:'工事検査申込日', type:'date'},
+    {k:'drawingDate', label:'完成図提出日', type:'date'},
+    {k:'chlorineValue', label:'残留塩素（遊離）濃度 mg/L', ph:'例：0.4'},
+    {k:'chlorineDate', label:'残留塩素測定日', type:'date'}
+  ]},
+  { title:'⑧ 取消・設計変更・施行延期（様式3-1 用）', fields:[
+    {k:'changeKind', label:'届出の種類', type:'radio', options:['取消','設計変更','施行延期']},
+    {k:'changeDetail', label:'変更（延期）の内容', type:'textarea', wide:true},
+    {k:'changeReason', label:'理由', type:'textarea', wide:true}
+  ]},
+  { title:'⑨ 各種届出（様式277 用）', fields:[
+    {k:'notifyKind', label:'届出の種類', ph:'例：給水装置確認申込み'},
+    {k:'notifyDate', label:'届出年月日', type:'date'},
+    {k:'notifyDetail', label:'届出の内容', type:'textarea', wide:true}
+  ]},
+  { title:'⑩ 委任状', fields:[
+    {k:'proxyDate', label:'委任年月日', type:'date'},
+    {k:'proxyItems', label:'委任事項（必要に応じて編集）', type:'textarea', wide:true}
+  ]}
+];
+
+const DOCS = [
+  {id:'1-3', no:'様式1-3', title:'給水装置工事申請申込書',
+    desc:'工事申込み・施行承認・設計審査をまとめて申し込む基本様式。使う欄：①〜⑥', render:renderDoc_13},
+  {id:'2-1', no:'様式2-1', title:'指定給水装置工事事業者工事調書',
+    desc:'新設・改造・撤去工事の経過（設計審査〜完工）をまとめる調書。使う欄：①〜⑦', render:renderDoc_21},
+  {id:'37-2', no:'様式37-2', title:'指定給水装置工事事業者工事検査申込書',
+    desc:'工事完了後に都の工事検査を申し込む様式。残留塩素測定値を記入。使う欄：①〜⑤・⑦', render:renderDoc_372},
+  {id:'3-1', no:'様式3-1', title:'給水装置工事取消・設計変更・施行延期届',
+    desc:'申込み済みの工事を取り消し・変更・延期するときの届。使う欄：①〜④・⑧', render:renderDoc_31},
+  {id:'277', no:'様式277', title:'給水装置関係各種届出書',
+    desc:'給水装置確認申込みなど各種届出に使う汎用様式。使う欄：②〜④・⑨', render:renderDoc_277},
+  {id:'inin', no:'参考様式', title:'委任状',
+    desc:'申込者が指定事業者に申請手続を委任する書類（任意様式）。使う欄：②〜④・⑩', render:renderDoc_inin}
+];
+
+function gv(k){ return (S.docData[k] || '').trim(); }
+function v(k, w){
+  const x = gv(k);
+  return x ? '<span class="fv">' + esc(x).replace(/\n/g,'<br>') + '</span>'
+           : '<span class="fb" style="min-width:' + (w || 8) + 'em"></span>';
+}
+function ck(cond){ return '<span class="ckbox">' + (cond ? '☑' : '☐') + '</span>'; }
+function dt(k){
+  const iso = gv(k);
+  if(!iso) return '令和<span class="fb yw"></span>年<span class="fb yw"></span>月<span class="fb yw"></span>日';
+  const p = iso.split('-');
+  return '令和<span class="fv">' + (Number(p[0]) - 2018) + '</span>年<span class="fv">' +
+         Number(p[1]) + '</span>月<span class="fv">' + Number(p[2]) + '</span>日';
+}
+function partyTable(){
+  return '<table>' +
+    '<tr><th rowspan="2">申込者<br>（施工主）</th>' +
+      '<td style="width:38mm">フリガナ</td><td>' + v('ownerKana',10) + '</td></tr>' +
+    '<tr><td>氏名</td><td>' + v('ownerName',10) + '<span class="seal">印</span></td></tr>' +
+    '<tr><th>住所</th><td colspan="2">〒' + v('ownerZip',4) + '　' + v('ownerAddr',16) +
+      '　電話 ' + v('ownerTel',6) + '</td></tr>' +
+    '<tr><th>工事場所</th><td colspan="2">' + v('siteAddr',16) + '　' + v('siteBuilding',0) + '</td></tr>' +
+  '</table>';
+}
+function companyTable(withEngineer){
+  let h = '<table>' +
+    '<tr><th rowspan="2">指定給水装置<br>工事事業者<br>（委任代理人）</th>' +
+      '<td style="width:38mm">指定番号</td><td>' + v('companyNo',6) + '　電話 ' + v('companyTel',6) + '</td></tr>' +
+    '<tr><td>所在地・名称</td><td>' + v('companyAddr',12) + '<br>' + v('companyName',10) +
+      '　' + v('companyRep',0) + '<span class="seal">印</span></td></tr>';
+  if(withEngineer){
+    h += '<tr><th>給水装置工事<br>主任技術者</th><td style="width:38mm">氏名</td><td>' + v('engineerName',8) +
+      '　免状交付番号 ' + v('engineerLicense',6) + '</td></tr>';
+  }
+  return h + '</table>';
+}
+function renderDoc_13(){
+  const ak = gv('applyKind'), wt = gv('workType'), bt = gv('billTo'), ex = gv('existing');
+  return '<div class="docdate">申込月日　' + dt('appDate') + '</div>' +
+  '<h1>給水装置工事申請申込書</h1>' +
+  '<div class="to">東京都水道局長　殿</div>' +
+  '<div class="lead">◎裏面誓約事項等を確認の上、該当する申込み・申請項目に「✔」印を付け、必要事項を記入してください。</div>' +
+  '<div class="ckline">' +
+    ck(ak==='給水装置工事施行承認申込み') + '給水装置工事施行承認申込み　' +
+    ck(ak==='給水装置工事申込み') + '給水装置工事申込み　' +
+    ck(ak==='指定給水装置工事事業者設計審査申込み') + '指定給水装置工事事業者設計審査申込み</div>' +
+  '<div class="ckline">工事種別：' + ck(wt==='新設') + '新設　' + ck(wt==='改造') + '改造　' +
+    ck(wt==='撤去') + '撤去</div>' +
+  '<table><tr><th>お客さま番号</th><td>' + v('customerNo',10) + '</td>' +
+    '<th>幹栓<br>お客さま番号</th><td>' + v('mainCustomerNo',8) + '</td></tr></table>' +
+  partyTable() + companyTable(true) +
+  '<table>' +
+    '<tr><th>用途</th><td>' + v('siteUse',8) + '</td>' +
+    '<th>メータ呼び径</th><td>新：' + v('meterDiaNew',4) + '　旧：' + v('meterDiaOld',4) + '</td></tr>' +
+    '<tr><th>同一敷地内<br>既設給水装置</th><td colspan="3">' +
+      ck(ex==='無') + '無　' + ck(ex==='有（使用中）') + '有（使用中）　' +
+      ck(ex==='有（中止中）') + '有（中止中）</td></tr>' +
+    '<tr><th>工事費請求先</th><td colspan="3">' +
+      ck(bt==='申込者') + '（1）申込者　' + ck(bt==='委任代理人') + '（2）委任代理人　' +
+      ck(bt==='その他') + '（3）その他（' + v('billOther',10) + '）</td></tr>' +
+    '<tr><th>摘要</th><td colspan="3">' + v('workSummary',20) + '</td></tr>' +
+  '</table>' +
+  '<ul class="notes">' +
+    '<li>工事費請求先欄には、工事費の予納、還付又は追徴を行う者の□にレを記入してください。（3）その他の場合は住所、氏名及び電話番号を記入してください。</li>' +
+    '<li>工事費は概算額です。工事完了後、清算（追徴又は還付）を行います。</li>' +
+    '<li>給水条例施行規程第14条第1項に基づき、指定期間内に工事費を納入されないときは、工事の申込みを取り消されたものとみなします。</li>' +
+  '</ul>';
+}
+function renderDoc_21(){
+  const wt = gv('workType');
+  return '<div class="docdate">作成日　' + dt('appDate') + '</div>' +
+  '<h1>指定給水装置工事事業者工事調書</h1>' +
+  '<div class="center" style="margin:-4mm 0 4mm; font-size:11.5pt;">（ ' +
+    ck(wt==='新設') + '新設　' + ck(wt==='改造') + '改造　' + ck(wt==='撤去') + '撤去 ）</div>' +
+  '<div class="lead">※太枠内を記入のうえ提出してください。</div>' +
+  '<table><tr><th>お客さま番号</th><td>' + v('customerNo',10) + '</td>' +
+    '<th>メータ呼び径</th><td>新：' + v('meterDiaNew',4) + '　旧：' + v('meterDiaOld',4) + '</td></tr></table>' +
+  partyTable() + companyTable(true) +
+  '<table>' +
+    '<tr><th>設計審査</th><td>' + dt('designApprovedDate') + '</td>' +
+        '<th>工事検査申込</th><td>' + dt('inspectionDate') + '</td></tr>' +
+    '<tr><th>完工</th><td>' + dt('completionDate') + '</td>' +
+        '<th>完成図提出</th><td>' + dt('drawingDate') + '</td></tr>' +
+    '<tr><th>工事概要</th><td colspan="3">' + v('workSummary',20) + '</td></tr>' +
+  '</table>' +
+  '<ul class="notes"><li>増圧給水設備・子メータ・管理人（選定・変更）届等の該当がある場合は、所定欄のある公式様式に記入してください。</li></ul>';
+}
+function renderDoc_372(){
+  return '<div class="docdate">申込年月日　' + dt('inspectionDate') + '</div>' +
+  '<h1>指定給水装置工事事業者工事検査申込書</h1>' +
+  '<div class="to">東京都水道局長　殿</div>' +
+  '<div class="lead">東京都給水条例第6条第2項の規定に基づき、下記給水装置工事の検査を申し込みます。</div>' +
+  '<div class="ki">記</div>' +
+  '<table><tr><th>お客さま番号</th><td>' + v('customerNo',10) + '</td>' +
+    '<th>完工日</th><td>' + dt('completionDate') + '</td></tr></table>' +
+  partyTable() +
+  '<table>' +
+    '<tr><th>水質確認結果<br>（自主検査）</th><td colspan="3">残留塩素（遊離）濃度　' +
+      v('chlorineValue',4) + '　mg/L　／　測定日　' + dt('chlorineDate') + '</td></tr>' +
+    '<tr><th>工事概要</th><td colspan="3">' + v('workSummary',20) + '</td></tr>' +
+  '</table>' + companyTable(true) +
+  '<ul class="notes">' +
+    '<li>工事検査申込書には、給水装置工事完成後の自主検査時に行った水質確認結果（残留塩素濃度測定値及び測定日）を記入してください。</li>' +
+    '<li>連続したお客さま番号かつ同一所有者の連合給水管を同時施行した場合は、1枚にまとめて申し込むことができます。</li>' +
+  '</ul>';
+}
+function renderDoc_31(){
+  const kind = gv('changeKind');
+  return '<div class="docdate">届出年月日　' + dt('appDate') + '</div>' +
+  '<h1>給水装置工事取消・設計変更・施行延期届</h1>' +
+  '<div class="to">東京都水道局長　殿</div>' +
+  '<div class="lead">申込み済みの下記給水装置工事について、次のとおり届け出ます。</div>' +
+  '<div class="ckline">届出の種類：' + ck(kind==='取消') + '取消　' + ck(kind==='設計変更') + '設計変更　' +
+    ck(kind==='施行延期') + '施行延期</div>' +
+  '<table><tr><th>お客さま番号</th><td>' + v('customerNo',10) + '</td>' +
+    '<th>工事種別</th><td>' + v('workType',6) + '</td></tr></table>' +
+  partyTable() +
+  '<table>' +
+    '<tr><th>変更（延期）<br>の内容</th><td>' + v('changeDetail',20) + '</td></tr>' +
+    '<tr><th>理由</th><td>' + v('changeReason',20) + '</td></tr>' +
+  '</table>' + companyTable(true) +
+  '<ul class="notes"><li>分岐位置・分岐部分の口径・メータ取付部分の口径を変更する場合は、変更内容が分かる図面を添えて提出してください。</li></ul>';
+}
+function renderDoc_277(){
+  return '<div class="docdate">届出年月日　' + dt('notifyDate') + '</div>' +
+  '<h1>給水装置関係各種届出書</h1>' +
+  '<div class="to">東京都水道局長　殿</div>' +
+  '<div class="lead">給水装置に関し、次のとおり届け出ます。</div>' +
+  '<table>' +
+    '<tr><th>届出の種類</th><td>' + v('notifyKind',14) + '</td></tr>' +
+    '<tr><th>お客さま番号</th><td>' + v('customerNo',10) + '</td></tr>' +
+  '</table>' + partyTable() +
+  '<table><tr><th>届出の内容</th><td style="height:40mm; vertical-align:top;">' + v('notifyDetail',20) + '</td></tr></table>' +
+  companyTable(false) +
+  '<ul class="notes"><li>給水装置確認申込みの場合は、所定の方法により作成した完成図を1部添えて、当該設備箇所を所管する取扱事業所へ提出してください。</li></ul>';
+}
+function renderDoc_inin(){
+  const items = gv('proxyItems') || DEFAULT_PROXY_ITEMS;
+  return '<h1 style="margin-top:10mm;">委　任　状</h1>' +
+  '<div style="margin:8mm 0 2mm;">（受任者）</div>' +
+  '<table style="width:80%;">' +
+    '<tr><th>住所</th><td>' + v('companyAddr',14) + '</td></tr>' +
+    '<tr><th>氏名</th><td>' + v('companyName',10) + '　' + v('companyRep',0) + '</td></tr>' +
+  '</table>' +
+  '<p style="margin:6mm 0 2mm; font-size:11.5pt;">私は、上記の者を代理人と定め、次の権限を委任します。</p>' +
+  '<div class="ki">記</div>' +
+  '<ol class="items" style="list-style:none;">' +
+    items.split('\n').map(function(l){ return '<li>' + esc(l) + '</li>'; }).join('') +
+  '</ol>' +
+  '<table style="width:80%;"><tr><th>工事場所</th><td>' + v('siteAddr',14) + '</td></tr></table>' +
+  '<div style="margin-top:10mm;">' + dt('proxyDate') + '</div>' +
+  '<div class="sign">' +
+    '<div class="row">（委任者）</div>' +
+    '<div class="row">住所　' + v('ownerAddr',12) + '</div>' +
+    '<div class="row">氏名　' + v('ownerName',8) + '<span class="seal">印</span></div>' +
+  '</div>' +
+  '<ul class="notes" style="margin-top:14mm;">' +
+    '<li>委任状は形式の限定はありませんが、①委任者の住所・氏名及び印、②受任者の住所・氏名、③委任年月日、④委任内容を記入してください（工事施行要領 4.4）。</li>' +
+  '</ul>';
+}
+
+/* ================= 画面：共通 ================= */
+const TABS = [
+  ['dashboard','🏠 ダッシュボード'], ['wizard','📝 新規申請'], ['review','🤖 AI審査'],
+  ['cad','📐 Web-CAD'], ['form','📄 申請書類'], ['calc','💧 水理計算'],
+  ['history','🕘 履歴'], ['rules','📚 ルール参照']
+];
+
+function render(){
+  const root = document.getElementById('app');
+  if(!root) return;
+  root.innerHTML = (S.view === 'checker') ? renderCheckerView() : renderJigyoshaView();
+  afterRender();
+}
+
+function renderJigyoshaView(){
+  let h = '<header class="top">' +
+    '<span class="logo">💧 Mizumachi</span><span class="mode">事業者モード</span>' +
+    '<span class="spacer"></span>' +
+    '<button type="button" data-view="checker">🏛 自治体側（Checker）へ切替</button></header>';
+  h += '<nav class="tabs">';
+  for(const t of TABS){
+    h += '<button type="button" data-tab="' + t[0] + '" class="' + (S.tab === t[0] ? 'on' : '') + '">' + t[1] + '</button>';
+  }
+  h += '</nav><main>';
+  const f = {
+    dashboard:renderDashboard, wizard:renderWizard, review:renderReview, cad:renderCad,
+    form:renderFormTab, calc:renderCalc, history:renderHistory, rules:renderRules
+  }[S.tab] || renderDashboard;
+  h += f();
+  h += '</main>';
+  h += renderOverlay();
+  return h;
+}
+
+/* ================= ダッシュボード ================= */
+function renderDashboard(){
+  const cnt = {};
+  for(const a of S.apps){ cnt[a.status] = (cnt[a.status] || 0) + 1; }
+  let h = '<h1 class="page">ダッシュボード</h1>' +
+    '<div class="pagesub">案件の進行状況をひと目で確認できます。行をクリックすると案件を開きます。</div>' +
+    '<div class="grid4" style="margin-bottom:16px;">' +
+    '<div class="kpi"><div class="n">' + S.apps.length + '</div><div class="l">全案件</div></div>' +
+    '<div class="kpi"><div class="n">' + (cnt['ai-review'] || 0) + '</div><div class="l">AI事前審査中</div></div>' +
+    '<div class="kpi"><div class="n">' + (cnt['submitted'] || 0) + '</div><div class="l">審査申請中</div></div>' +
+    '<div class="kpi"><div class="n">' + (cnt['approved'] || 0) + '</div><div class="l">承認済み</div></div></div>';
+  h += '<div class="card" style="padding:0; overflow:hidden;"><table class="list">' +
+    '<tr><th>案件番号</th><th>工事場所／種別</th><th>申込者</th><th>口径</th><th>状態</th><th>更新日</th></tr>';
+  for(const a of S.apps){
+    h += '<tr class="click" data-open-app="' + esc(a.id) + '">' +
+      '<td>' + esc(a.id) + '</td><td>' + esc(appName(a)) + '</td>' +
+      '<td>' + esc(a.data.ownerName || '—') + '</td>' +
+      '<td>' + esc(a.data.meterDiaNew || a.data.meterDiaOld || '—') + '</td>' +
+      '<td>' + badge(a.status) + '</td><td>' + esc(a.updated) + '</td></tr>';
+  }
+  h += '</table></div>' +
+    '<button class="btn" type="button" data-tab="wizard">＋ 新規申請をはじめる</button>';
+  return h;
+}
+
+/* ================= 新規申請ウィザード ================= */
+const WZ_STEPS = ['工事種別','申込者','工事場所','事業者・主任技術者','工事内容・確認'];
+function wzv(k){ return S.wizardData[k] != null ? S.wizardData[k] : ''; }
+function wzInput(k, label, ph, wide){
+  return '<div class="fld' + (wide ? ' fldwide' : '') + '"><label>' + esc(label) + '</label>' +
+    '<input type="text" data-wz="' + esc(k) + '" value="' + esc(wzv(k)) + '" placeholder="' + esc(ph || '') + '"></div>';
+}
+function wzRadio(k, label, options){
+  let h = '<div class="fld fldwide"><label>' + esc(label) + '</label><div class="radios">';
+  for(const op of options){
+    h += '<label><input type="radio" name="wz_' + esc(k) + '" value="' + esc(op) + '" data-wz="' + esc(k) + '"' +
+      (wzv(k) === op ? ' checked' : '') + '>' + esc(op) + '</label>';
+  }
+  return h + '</div></div>';
+}
+function renderWizard(){
+  let h = '<h1 class="page">新規申請ウィザード</h1>' +
+    '<div class="pagesub">順番に入力するだけで、案件の作成から申請書類の自動生成まで進みます。</div>';
+  h += '<div class="steps">';
+  WZ_STEPS.forEach(function(s, i){
+    h += '<div class="st' + (i === S.wizardStep ? ' on' : (i < S.wizardStep ? ' done' : '')) + '">' +
+      (i + 1) + '. ' + esc(s) + '</div>';
+  });
+  h += '</div><div class="card"><div class="grid2">';
+  const st = S.wizardStep;
+  if(st === 0){
+    h += wzRadio('workType','工事種別を選んでください',['新設','改造','撤去']) +
+         wzRadio('applyKind','申込み区分（様式1-3）',
+           ['給水装置工事施行承認申込み','給水装置工事申込み','指定給水装置工事事業者設計審査申込み']) +
+         wzInput('customerNo','お客さま番号（改造・撤去のとき）','例：00-123456-1-0', true);
+  }else if(st === 1){
+    h += wzInput('ownerKana','フリガナ','スイドウ タロウ') +
+         wzInput('ownerName','氏名','水道 太郎') +
+         wzInput('ownerZip','郵便番号','160-0023') +
+         wzInput('ownerTel','電話番号','03-0000-0000') +
+         wzInput('ownerAddr','住所','東京都新宿区西新宿○丁目○番○号', true);
+  }else if(st === 2){
+    h += wzInput('siteAddr','工事場所（住所）','東京都新宿区西新宿○丁目○番○号', true) +
+         wzInput('siteBuilding','建物名・部屋番号（あれば）','') +
+         wzRadio('siteUse','用途',['一般住宅','共同住宅','店舗','事務所','その他']);
+  }else if(st === 3){
+    h += '<div class="fldwide hint">あなたの会社情報（プロフィール）です。書類に自動転記されます。</div>' +
+         wzInput('companyName','事業者名','') + wzInput('companyNo','指定番号','第12345号') +
+         wzInput('companyRep','代表者名','') + wzInput('companyTel','電話番号','') +
+         wzInput('companyAddr','所在地','', true) +
+         wzInput('engineerName','主任技術者 氏名','') +
+         wzInput('engineerLicense','免状交付番号','第654321号');
+  }else{
+    h += wzInput('meterDiaNew','メータ呼び径（新）','20mm') +
+         wzInput('meterDiaOld','メータ呼び径（旧）','※口径変更・撤去のとき') +
+         '<div class="fld fldwide"><label>工事概要</label>' +
+         '<textarea data-wz="workSummary" placeholder="例：配水小管φ100mmより分岐し、給水管φ20mmを新設、メータ（呼び径20mm）を設置する。">' +
+         esc(wzv('workSummary')) + '</textarea></div>' +
+         '<div class="fldwide hint">「案件を作成」を押すと、入力内容がAI審査と申請書類（様式1-3ほか）へ自動で流れます。</div>';
+  }
+  h += '</div><div class="wzbtns">';
+  if(st > 0) h += '<button class="btn gray" type="button" data-wz-prev>← 戻る</button>';
+  if(st < WZ_STEPS.length - 1) h += '<button class="btn" type="button" data-wz-next>次へ →</button>';
+  else h += '<button class="btn green" type="button" data-wz-finish>✔ 案件を作成してAI審査へ</button>';
+  h += '</div></div>';
+  return h;
+}
+function wizardInitProfile(){
+  if(S.wizardData.companyName == null){
+    Object.assign(S.wizardData, S.profile);
+  }
+}
+function createAppFromWizard(){
+  const d = Object.assign({}, S.wizardData);
+  // 会社情報はプロフィールとしても保存（次回から自動入力）
+  for(const k of Object.keys(PROFILE_DEFAULT)){ if(d[k]) S.profile[k] = d[k]; }
+  const seq = (S.apps.length + 1 + '').padStart(3, '0');
+  const ym = todayISO(0).slice(2, 7).replace('-', '');
+  const app = { id:'A-' + ym + '-' + seq, status:'ai-review', updated:todayISO(0), aiDone:false,
+    data:d, history:[{t:todayISO(0), ev:'案件を作成（新規申請ウィザード）'}] };
+  S.apps.unshift(app);
+  S.activeAppId = app.id;
+  // 書類データへ転記
+  S.docData = Object.assign({}, S.docData, d, { appDate:todayISO(0) });
+  S.wizardData = {}; S.wizardStep = 0;
+  save();
+}
+
+/* ================= AI審査 ================= */
+function appSelector(dataAttr){
+  let h = '<div class="fld" style="max-width:430px;"><label>対象案件</label><select ' + dataAttr + '>';
+  for(const a of S.apps){
+    h += '<option value="' + esc(a.id) + '"' + (a.id === S.activeAppId ? ' selected' : '') + '>' +
+      esc(a.id + '　' + appName(a)) + '</option>';
+  }
+  return h + '</select></div>';
+}
+function renderReview(){
+  const app = activeApp();
+  let h = '<h1 class="page">AI事前審査</h1>' +
+    '<div class="pagesub">申請前にAIが記載漏れ・ルール抵触をチェックします（都の審査そのものではありません）。</div>' +
+    appSelector('data-app-select');
+  if(!app) return h + '<div class="empty">案件がありません。新規申請から作成してください。</div>';
+  h += '<div class="card"><div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">' +
+    '<strong>' + esc(app.id) + '</strong> ' + badge(app.status) +
+    '<span class="hint">' + esc(appName(app)) + '／申込者：' + esc(app.data.ownerName || '—') + '</span>' +
+    '<span style="flex:1"></span>';
+  if(!app.aiDone){
+    h += '<button class="btn" type="button" data-ai-run>🤖 AI事前審査を実行</button>';
+  }else{
+    h += '<button class="btn ghost" type="button" data-ai-run>🔄 再実行</button>';
+  }
+  h += '</div></div>';
+  h += '<div id="aiArea">';
+  if(S._aiRunning){
+    h += '<div class="card center" style="text-align:center; padding:30px;">' +
+      '<span class="spin" style="font-size:24px;">⚙️</span><div class="hint" style="margin-top:8px;">図面・申請データを照合中…</div></div>';
+  }else if(app.aiDone){
+    const fs = aiCheck(app);
+    const ic = {ok:'✅', warn:'⚠️', err:'❌'};
+    for(const f of fs){
+      h += '<div class="finding ' + f.lv + '"><span class="ic">' + ic[f.lv] + '</span>' +
+        '<div><div class="t">' + esc(f.t) + '</div><div class="d">' + esc(f.d) + '</div></div></div>';
+    }
+    const ngs = fs.filter(function(x){ return x.lv !== 'ok'; }).length;
+    h += '<div class="card" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">' +
+      '<span>' + (ngs ? '⚠️ 指摘 ' + ngs + ' 件。修正のうえ申請してください。' : '✅ 指摘はありません。申請に進めます。') + '</span>' +
+      '<span style="flex:1"></span>' +
+      '<button class="btn ghost" type="button" data-doc-go>📄 申請書類を生成する</button>';
+    if(app.status === 'ai-review'){
+      h += '<button class="btn green" type="button" data-app-submit>📤 東京都へ審査申請</button>';
+    }
+    h += '</div>';
+  }else{
+    h += '<div class="empty">「AI事前審査を実行」を押すとチェックが始まります</div>';
+  }
+  return h + '</div>';
+}
+
+/* ================= Web-CAD ================= */
+const CAD_TOOLS = [
+  ['select','☝ 選択'], ['haisui','━ 配水管'], ['kyusui','─ 給水管'],
+  ['meter','Ⓜ メータ'], ['valve','✕ 止水栓'], ['tap','🚰 給水栓']
+];
+function renderCad(){
+  let h = '<h1 class="page">Web-CAD（平面図スケッチ）</h1>' +
+    '<div class="pagesub">配管とメータを配置して工事平面図のラフを作成します。管はクリックで点を打ち、ダブルクリックで確定。</div>';
+  h += '<div class="cadbar">';
+  for(const t of CAD_TOOLS){
+    h += '<button type="button" data-cad-tool="' + t[0] + '" class="' + (S.cad.tool === t[0] ? 'on' : '') + '">' + t[1] + '</button>';
+  }
+  h += '<span style="width:10px"></span><label class="hint">口径 <select data-cad-dia>';
+  for(const d of ['13','20','25','40','50']){
+    h += '<option value="' + d + '"' + (S.cad.dia === d ? ' selected' : '') + '>φ' + d + '</option>';
+  }
+  h += '</select></label>' +
+    '<span style="flex:1"></span>' +
+    '<button type="button" data-cad-del>🗑 選択を削除</button>' +
+    '<button type="button" data-cad-clear>全消去</button></div>';
+  h += '<div class="cadwrap"><svg id="cadSvg" width="900" height="520" viewBox="0 0 900 520">' + cadSvgContent() + '</svg></div>';
+  h += '<div class="legend">凡例：<span style="color:#1d4ed8">━ 配水管</span>　' +
+    '<span style="color:#059669">─ 給水管</span>　Ⓜ メータ　✕ 止水栓　○ 給水栓　｜グリッド1マス=1m想定</div>';
+  return h;
+}
+function cadSvgContent(){
+  let h = '<defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">' +
+    '<path d="M20 0H0V20" fill="none" stroke="#e2e8f0" stroke-width="1"/></pattern></defs>' +
+    '<rect width="900" height="520" fill="url(#grid)"/>';
+  for(const el of S.cad.elems){ h += cadElemSvg(el, el.id === S.cad.selId); }
+  if(S.cad.draft && S.cad.draft.pts.length){
+    const pts = S.cad.draft.pts.map(function(p){ return p[0] + ',' + p[1]; }).join(' ');
+    h += '<polyline points="' + pts + '" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-dasharray="6 4"/>';
+  }
+  return h;
+}
+function cadElemSvg(el, sel){
+  const cls = 'cadel' + (sel ? ' sel' : '');
+  if(el.type === 'haisui' || el.type === 'kyusui'){
+    const pts = el.pts.map(function(p){ return p[0] + ',' + p[1]; }).join(' ');
+    const col = el.type === 'haisui' ? '#1d4ed8' : '#059669';
+    const w = el.type === 'haisui' ? 7 : 3.5;
+    const mid = el.pts[Math.floor(el.pts.length / 2) - (el.pts.length % 2 ? 0 : 1)];
+    return '<polyline points="' + pts + '" fill="none" stroke="' + col + '" stroke-width="' + w +
+      '" stroke-linecap="round" class="' + cls + '" data-cad-el="' + el.id + '"/>' +
+      '<text x="' + (mid[0] + 6) + '" y="' + (mid[1] - 6) + '" font-size="11" fill="' + col + '">φ' + esc(el.dia) + '</text>';
+  }
+  const x = el.x, y = el.y;
+  if(el.type === 'meter'){
+    return '<g class="' + cls + '" data-cad-el="' + el.id + '">' +
+      '<rect x="' + (x-11) + '" y="' + (y-11) + '" width="22" height="22" fill="#fff" stroke="#0f172a" stroke-width="2"/>' +
+      '<text x="' + x + '" y="' + (y+4.5) + '" font-size="12" text-anchor="middle" font-weight="bold">M</text>' +
+      '<text x="' + (x+14) + '" y="' + (y-12) + '" font-size="11" fill="#334155">φ' + esc(el.dia) + '</text></g>';
+  }
+  if(el.type === 'valve'){
+    return '<g class="' + cls + '" data-cad-el="' + el.id + '">' +
+      '<path d="M' + (x-9) + ' ' + (y-8) + ' L' + (x+9) + ' ' + (y+8) + ' M' + (x-9) + ' ' + (y+8) +
+      ' L' + (x+9) + ' ' + (y-8) + '" stroke="#b45309" stroke-width="3" fill="none"/></g>';
+  }
+  return '<g class="' + cls + '" data-cad-el="' + el.id + '">' +
+    '<circle cx="' + x + '" cy="' + y + '" r="9" fill="#fff" stroke="#0369a1" stroke-width="2.5"/>' +
+    '<text x="' + x + '" y="' + (y+4) + '" font-size="10" text-anchor="middle" fill="#0369a1">栓</text></g>';
+}
+function patchCadSvg(){
+  const svg = document.getElementById('cadSvg');
+  if(svg) svg.innerHTML = cadSvgContent();
+}
+function cadSnap(n){ return Math.round(n / 20) * 20; }
+function cadPoint(svg, ev){
+  const r = svg.getBoundingClientRect();
+  const sx = 900 / r.width, sy = 520 / r.height;
+  return [cadSnap((ev.clientX - r.left) * sx), cadSnap((ev.clientY - r.top) * sy)];
+}
+
+/* ================= 申請書類タブ ================= */
+function renderFormTab(){
+  let h = '<h1 class="page">申請書類の自動生成</h1>' +
+    '<div class="pagesub">1セットの入力から東京都水道局の現行様式6種類を生成します。案件を選ぶと内容が自動転記されます。</div>';
+  h += '<div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:12px;">' +
+    appSelector('data-doc-loadapp') +
+    '<span class="hint" style="padding-bottom:12px;">▲ 選ぶと案件データを下のフォームへ転記します</span></div>';
+  h += '<div class="formgrid"><div>';
+  for(const sec of DOC_SECTIONS){
+    h += '<div class="sec"><h3>' + esc(sec.title) + '</h3><div class="body">';
+    for(const f of sec.fields){
+      const cur = S.docData[f.k] != null ? S.docData[f.k] : '';
+      h += '<div class="fld' + (f.wide || f.type === 'radio' || f.type === 'textarea' ? ' fldwide' : '') + '">' +
+        '<label>' + esc(f.label) + '</label>';
+      if(f.type === 'radio'){
+        h += '<div class="radios">';
+        for(const op of f.options){
+          h += '<label><input type="radio" name="doc_' + esc(f.k) + '" value="' + esc(op) +
+            '" data-doc-field="' + esc(f.k) + '"' + (cur === op ? ' checked' : '') + '>' + esc(op) + '</label>';
+        }
+        h += '</div>';
+      }else if(f.type === 'textarea'){
+        h += '<textarea data-doc-field="' + esc(f.k) + '" placeholder="' + esc(f.ph || '') + '">' + esc(cur) + '</textarea>';
+      }else{
+        h += '<input type="' + (f.type === 'date' ? 'date' : 'text') + '" data-doc-field="' + esc(f.k) +
+          '" value="' + esc(cur) + '" placeholder="' + esc(f.ph || '') + '">';
+      }
+      h += '</div>';
+    }
+    h += '</div></div>';
+  }
+  h += '</div><div class="docpanel"><h2 style="font-size:15px; color:var(--blue-d);">📄 生成できる書類</h2>' +
+    '<div class="hint" style="margin-bottom:10px;">空欄は点線の記入欄として印刷されます。</div>';
+  for(const d of DOCS){
+    h += '<div class="doc"><span class="no">' + esc(d.no) + '</span>' +
+      '<div class="ttl">' + esc(d.title) + '</div><div class="desc">' + esc(d.desc) + '</div>' +
+      '<div class="btns"><button type="button" class="prev" data-doc-preview="' + esc(d.id) + '">👁 プレビュー</button>' +
+      '<button type="button" class="pdf" data-doc-pdf="' + esc(d.id) + '">🖨 PDF</button></div></div>';
+  }
+  h += '<div class="hint">※「指定給水装置工事事業者工事施行要領（令和8年4月）」の様式構成に基づく再現様式です。提出時は公式様式をご確認ください。</div>';
+  h += '</div></div>';
+  return h;
+}
+function renderOverlay(){
+  if(!S.docPreviewId) return '';
+  const doc = DOCS.find(function(d){ return d.id === S.docPreviewId; });
+  if(!doc) return '';
+  return '<div class="overlay" id="overlay">' +
+    '<div class="overlay-bar"><span class="t">' + esc(doc.no + '　' + doc.title) + '</span>' +
+    '<span class="spacer"></span>' +
+    '<button class="print" type="button" data-doc-print>🖨 印刷 / PDF保存</button>' +
+    '<button class="close" type="button" data-doc-close>✕ 閉じる</button></div>' +
+    '<div class="overlay-body" id="overlayBody"><div id="sheetWrap"><div class="sheet">' + doc.render() + '</div></div></div></div>';
+}
+
+/* ================= 水理計算 ================= */
+function renderCalc(){
+  const c = S.calc;
+  function inp(k, label, step){
+    return '<div class="fld"><label>' + esc(label) + '</label>' +
+      '<input type="number" step="' + (step || 'any') + '" data-calc="' + k + '" value="' + esc(c[k]) + '"></div>';
+  }
+  let h = '<h1 class="page">水理計算（直結直圧・簡易チェック）</h1>' +
+    '<div class="pagesub">ウェストン公式（φ50以下）で損失水頭を計算し、余裕水頭5m以上を確認します。</div>';
+  h += '<div class="grid2"><div class="card">' +
+    inp('press','配水管の最小動水圧（MPa）') +
+    '<div class="fld"><label>給水管の口径（mm）</label><select data-calc="dia">' +
+      ['13','20','25','40','50'].map(function(d){
+        return '<option value="' + d + '"' + (c.dia === d ? ' selected' : '') + '>φ' + d + '</option>';
+      }).join('') + '</select></div>' +
+    inp('len','給水管の延長（m）') +
+    inp('rise','立上り高さ・高低差（m）') +
+    inp('flow','設計流量（L/min）') +
+    inp('meterLoss','メータ等の損失水頭（m）') +
+    '<div class="hint">目安：台所12・浴室20・洗面8・トイレ12 L/min 程度。同時使用を考慮して合算します。</div>' +
+  '</div><div class="card"><h3 style="font-size:14px; margin-bottom:8px; color:var(--blue-d);">計算結果</h3>' +
+    '<div id="calcResult">' + calcResultHTML() + '</div></div></div>';
+  return h;
+}
+
+/* ================= 履歴 ================= */
+function renderHistory(){
+  const app = activeApp();
+  let h = '<h1 class="page">履歴</h1><div class="pagesub">案件ごとの操作・審査の記録です。</div>' +
+    appSelector('data-app-select');
+  if(!app) return h + '<div class="empty">案件がありません</div>';
+  h += '<div class="card"><div style="margin-bottom:10px;"><strong>' + esc(app.id) + '</strong> ' +
+    badge(app.status) + '　<span class="hint">' + esc(appName(app)) + '</span></div><div class="tl">';
+  for(let i = app.history.length - 1; i >= 0; i--){
+    const e = app.history[i];
+    h += '<div class="ev"><div class="d">' + esc(e.t) + '</div>' + esc(e.ev) + '</div>';
+  }
+  return h + '</div></div>';
+}
+
+/* ================= ルール参照 ================= */
+function rulesListHTML(){
+  const q = (S.ruleQuery || '').trim();
+  const list = RULES.filter(function(r){
+    return !q || (r.t + r.b + r.cat).indexOf(q) >= 0;
+  });
+  if(!list.length) return '<div class="empty">「' + esc(q) + '」に一致するルールはありません</div>';
+  return list.map(function(r){
+    return '<div class="rule"><span class="cat">' + esc(r.cat) + '</span>' +
+      '<div class="t">' + esc(r.t) + '</div><div class="b">' + esc(r.b) + '</div>' +
+      '<div class="src">📖 ' + esc(r.src) + '</div></div>';
+  }).join('');
+}
+function renderRules(){
+  return '<h1 class="page">ルール参照（東京都）</h1>' +
+    '<div class="pagesub">「指定給水装置工事事業者工事施行要領（令和8年4月・東京都水道局）」からの要点集です。</div>' +
+    '<div class="fld" style="max-width:430px;"><label>キーワード検索</label>' +
+    '<input type="text" id="ruleSearch" value="' + esc(S.ruleQuery) + '" placeholder="例：残留塩素／委任状／検査"></div>' +
+    '<div id="rulesList">' + rulesListHTML() + '</div>';
+}
+
+/* ================= 自治体側（Checker） ================= */
+function renderCheckerView(){
+  let h = '<header class="top checker">' +
+    '<span class="logo">🏛 Mizumachi Checker</span><span class="mode">自治体モード（東京都水道局・デモ）</span>' +
+    '<span class="spacer"></span>' +
+    '<button type="button" data-view="jigyosha">💧 事業者側へ切替</button></header><main>';
+  const queue = S.apps.filter(function(a){ return a.status === 'submitted'; });
+  const done = S.apps.filter(function(a){ return a.status === 'approved' || a.status === 'remand'; });
+  h += '<h1 class="page" style="color:#4c1d95;">審査キュー</h1>' +
+    '<div class="pagesub">事業者から申請された案件を確認し、承認または差戻しを行います。AI事前審査の結果が添付されます。</div>';
+  h += '<div class="grid4" style="margin-bottom:16px;">' +
+    '<div class="kpi"><div class="n">' + queue.length + '</div><div class="l">審査待ち</div></div>' +
+    '<div class="kpi"><div class="n">' + done.filter(function(a){ return a.status === 'approved'; }).length + '</div><div class="l">承認済み</div></div>' +
+    '<div class="kpi"><div class="n">' + done.filter(function(a){ return a.status === 'remand'; }).length + '</div><div class="l">差戻し</div></div>' +
+    '<div class="kpi"><div class="n">' + S.apps.length + '</div><div class="l">全案件</div></div></div>';
+  if(!queue.length){
+    h += '<div class="card"><div class="empty">審査待ちの案件はありません（事業者側で「東京都へ審査申請」すると、ここに届きます）</div></div>';
+  }
+  for(const a of queue){
+    h += checkerCard(a, true);
+  }
+  if(done.length){
+    h += '<h1 class="page" style="color:#4c1d95; margin-top:22px;">処理済み</h1>';
+    for(const a of done){ h += checkerCard(a, false); }
+  }
+  return h + '</main>';
+}
+function checkerCard(a, actionable){
+  const fs = aiCheck(a);
+  const ngs = fs.filter(function(x){ return x.lv !== 'ok'; });
+  let h = '<div class="card"><div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:8px;">' +
+    '<strong>' + esc(a.id) + '</strong> ' + badge(a.status) +
+    '<span class="hint">' + esc(appName(a)) + '／申込者：' + esc(a.data.ownerName || '—') +
+    '／口径：' + esc(a.data.meterDiaNew || a.data.meterDiaOld || '—') + '</span></div>';
+  h += '<div class="hint" style="margin-bottom:6px;">🤖 AI事前審査：' +
+    (ngs.length ? '⚠️ 指摘 ' + ngs.length + ' 件 — ' + esc(ngs.map(function(x){ return x.t; }).join('、')) : '✅ 指摘なし') +
+    '</div>';
+  h += '<div class="hint" style="margin-bottom:10px;">工事概要：' + esc(a.data.workSummary || '—') + '</div>';
+  if(actionable){
+    h += '<div style="display:flex; gap:10px;">' +
+      '<button class="btn purple" type="button" data-ck-approve="' + esc(a.id) + '">✔ 承認（設計審査合格）</button>' +
+      '<button class="btn red" type="button" data-ck-remand="' + esc(a.id) + '">↩ 差戻し</button></div>';
+  }
+  return h + '</div>';
+}
+
+/* ================= イベント ================= */
+function afterRender(){
+  const svg = document.getElementById('cadSvg');
+  if(svg){
+    svg.addEventListener('click', function(ev){
+      const tool = S.cad.tool;
+      if(tool === 'select'){
+        const t = ev.target.closest('[data-cad-el]');
+        S.cad.selId = t ? Number(t.getAttribute('data-cad-el')) : null;
+        patchCadSvg(); save();
+        return;
+      }
+      const p = cadPoint(svg, ev);
+      if(tool === 'haisui' || tool === 'kyusui'){
+        if(!S.cad.draft) S.cad.draft = {type:tool, pts:[]};
+        S.cad.draft.pts.push(p);
+        patchCadSvg();
+      }else{
+        S.cad.elems.push({id:S.cad.seq++, type:tool, x:p[0], y:p[1], dia:S.cad.dia});
+        patchCadSvg(); save();
+      }
+    });
+    svg.addEventListener('dblclick', function(){
+      const d = S.cad.draft;
+      if(d && d.pts.length >= 2){
+        S.cad.elems.push({id:S.cad.seq++, type:d.type, pts:d.pts, dia:S.cad.dia});
+      }
+      S.cad.draft = null;
+      patchCadSvg(); save();
+    });
+  }
+}
+
+function onEditInput(e){
+  const t = e.target;
+  if(!t || !t.getAttribute) return;
+  const dk = t.getAttribute('data-doc-field');
+  if(dk){ S.docData[dk] = t.value; save(); return; }
+  const wk = t.getAttribute('data-wz');
+  if(wk){ S.wizardData[wk] = t.value; save(); return; }
+  const ckey = t.getAttribute('data-calc');
+  if(ckey){
+    S.calc[ckey] = t.value; save();
+    const out = document.getElementById('calcResult');
+    if(out) out.innerHTML = calcResultHTML();
+    return;
+  }
+  if(t.id === 'ruleSearch'){
+    S.ruleQuery = t.value; save();
+    const out = document.getElementById('rulesList');
+    if(out) out.innerHTML = rulesListHTML();
+    return;
+  }
+  const sel = t.getAttribute('data-app-select') != null ? 'app' :
+              (t.getAttribute('data-doc-loadapp') != null ? 'doc' : null);
+  if(sel === 'app'){ S.activeAppId = t.value; save(); render(); }
+  if(sel === 'doc'){
+    S.activeAppId = t.value;
+    const app = activeApp();
+    if(app){ S.docData = Object.assign({}, S.docData, app.data); }
+    save(); render();
+  }
+  if(t.getAttribute('data-cad-dia') != null){ S.cad.dia = t.value; save(); }
+}
+
+function onClick(e){
+  const q = function(sel){ return e.target.closest('[' + sel + ']'); };
+  let el;
+  if((el = q('data-tab'))){
+    S.tab = el.getAttribute('data-tab');
+    if(S.tab === 'wizard') wizardInitProfile();
+    save(); render(); return;
+  }
+  if((el = q('data-view'))){ S.view = el.getAttribute('data-view'); save(); render(); return; }
+  if((el = q('data-open-app'))){
+    S.activeAppId = el.getAttribute('data-open-app'); S.tab = 'review'; save(); render(); return;
+  }
+  if(q('data-wz-prev')){ S.wizardStep = Math.max(0, S.wizardStep - 1); save(); render(); return; }
+  if(q('data-wz-next')){ S.wizardStep = Math.min(WZ_STEPS.length - 1, S.wizardStep + 1); save(); render(); return; }
+  if(q('data-wz-finish')){
+    createAppFromWizard(); S.tab = 'review'; render(); return;
+  }
+  if(q('data-ai-run')){
+    const app = activeApp();
+    if(!app) return;
+    S._aiRunning = true; render();
+    setTimeout(function(){
+      S._aiRunning = false;
+      if(!app.aiDone){ app.aiDone = true; pushHist(app, 'AI事前審査を実行'); }
+      save(); render();
+    }, 900);
+    return;
+  }
+  if(q('data-app-submit')){
+    const app = activeApp();
+    if(app && app.status === 'ai-review'){
+      app.status = 'submitted'; pushHist(app, '東京都へ設計審査を申請（様式1-3）');
+      save(); render();
+    }
+    return;
+  }
+  if(q('data-doc-go')){
+    const app = activeApp();
+    if(app){ S.docData = Object.assign({}, S.docData, app.data); }
+    S.tab = 'form'; save(); render(); return;
+  }
+  if((el = q('data-ck-approve'))){
+    const app = appById(el.getAttribute('data-ck-approve'));
+    if(app){ app.status = 'approved'; pushHist(app, '承認（設計審査合格）'); save(); render(); }
+    return;
+  }
+  if((el = q('data-ck-remand'))){
+    const app = appById(el.getAttribute('data-ck-remand'));
+    if(app){
+      const reason = prompt('差戻し理由を入力してください', '記載内容に不備があります');
+      if(reason == null) return;
+      app.status = 'remand'; pushHist(app, '差戻し：' + reason);
+      save(); render();
+    }
+    return;
+  }
+  if((el = q('data-cad-tool'))){
+    S.cad.tool = el.getAttribute('data-cad-tool'); S.cad.draft = null; save(); render(); return;
+  }
+  if(q('data-cad-del')){
+    if(S.cad.selId != null){
+      S.cad.elems = S.cad.elems.filter(function(x){ return x.id !== S.cad.selId; });
+      S.cad.selId = null; patchCadSvg(); save();
+    }
+    return;
+  }
+  if(q('data-cad-clear')){
+    if(confirm('図面をすべて消去します。よろしいですか？')){
+      S.cad.elems = []; S.cad.draft = null; S.cad.selId = null; patchCadSvg(); save();
+    }
+    return;
+  }
+  if((el = q('data-doc-preview'))){ S.docPreviewId = el.getAttribute('data-doc-preview'); render(); return; }
+  if((el = q('data-doc-pdf'))){
+    S.docPreviewId = el.getAttribute('data-doc-pdf'); render();
+    setTimeout(function(){ window.print(); }, 150);
+    return;
+  }
+  if(q('data-doc-print')){ window.print(); return; }
+  if(q('data-doc-close')){ S.docPreviewId = null; render(); return; }
+}
+
+function init(){
+  document.addEventListener('input', onEditInput);
+  document.addEventListener('change', onEditInput);
+  document.addEventListener('click', onClick);
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && S.docPreviewId){ S.docPreviewId = null; render(); }
+  });
+  render();
+}
+if(typeof document !== 'undefined' && document.getElementById && document.getElementById('app')){
+  init();
+}
+</script>
+</body>
+</html>
